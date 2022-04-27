@@ -1,0 +1,25 @@
+domain: vlo.io
+layout: go.kubebuilder.io/v3
+projectName: Vector logs operator
+repo: github.com/javdet/vector-logs-operator
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+version: '3'
+resources:
+  - group: logging
+    controller: true
+    kind: Agent
+    version: v1beta
+  - group: logging
+    controller: true
+    kind: Agregator
+    version: v1beta
+  - group: logging
+    controller: true
+    kind: output
+    version: v1beta
+  - group: logging
+    controller: true
+    kind: flow
+    version: v1beta

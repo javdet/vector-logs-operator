@@ -1,1 +1,1 @@
-# logs-operator
+# Vector logging operator
