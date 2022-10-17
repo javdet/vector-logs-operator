@@ -21,7 +21,12 @@ import (
 	"github.com/go-logr/logr"
 	loggerv1beta "github.com/javdet/vector-logs-operator/api/v1beta"
 	"github.com/redhat-cop/operator-utils/pkg/util"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 type AgentReconciler struct {
@@ -30,13 +35,13 @@ type AgentReconciler struct {
 	util.ReconcilerBase
 }
 
-var controllerLog = ctrl.Log.WithName("controller").WithName("Agent")
+var controllerLog = ctrl.Log.WithName("controller").WithName("VectorAgent")
 
-// +kubebuilder:rbac:groups=logging.vlo.io,resources=agents,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=logging.vlo.io,resources=agents/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=logging.vlo.io,resources=agents/finalizers,verbs=update
+// +kubebuilder:rbac:groups=logging.vlo.io,resources=vectoragents,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=logging.vlo.io,resources=vectoragents/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=logging.vlo.io,resources=vectoragents/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=namespaces,verbs=get;list;watch
-// +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=daemonsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
@@ -60,6 +65,52 @@ func (r *AgentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	log := r.Log.WithName("controller").WithName("agent")
 	controllerLog.Info("start reconcile", "request", req.NamespacedName)
 
+	instance := &loggerv1beta.VectorAgent{}
+	if err := r.GetClient().Get(ctx, req.NamespacedName, instance); err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, "cannot get object VectorAgent")
+		return ctrl.Result{}, err
+
+	}
+	err := r.CreateOrUpdateResource(ctx, instance, instance.Namespace, r.PipelineConfigMapFromCR(instance))
+	if err != nil {
+		log.Error(err, "cannot create configmap")
+		return r.ManageError(ctx, instance, err)
+	}
+
+	err = r.CreateResourceIfNotExists(ctx, instance, instance.Namespace, r.serviceAccountFromCR(instance))
+	if err != nil {
+		log.Error(err, "cannot create serviceaccount")
+		return r.ManageError(ctx, instance, err)
+	}
+
+	err = r.CreateOrUpdateResource(ctx, instance, instance.Namespace, r.clusterRoleFromCR(instance))
+	if err != nil {
+		log.Error(err, "cannot create role")
+		return r.ManageError(ctx, instance, err)
+	}
+
+	err = r.CreateOrUpdateResource(ctx, instance, instance.Namespace, r.clusterRoleBindingFromCR(instance))
+	if err != nil {
+		log.Error(err, "cannot create rolebinding")
+		return r.ManageError(ctx, instance, err)
+	}
+
+	err = r.CreateOrUpdateResource(ctx, instance, instance.Namespace, r.daemonSetFromCR(instance))
+	if err != nil {
+		log.Error(err, "cannot create daemonset")
+		return r.ManageError(ctx, instance, err)
+	}
+
+	err = r.CreateResourceIfNotExists(ctx, instance, instance.Namespace, r.daemonSetServiceFromCR(instance))
+	if err != nil {
+		log.Error(err, "cannot create configmap")
+		return r.ManageError(ctx, instance, err)
+
+	}
+
 	controllerLog.Info("finish reconcile", "request", req.NamespacedName)
 	return ctrl.Result{}, nil
 }
@@ -67,6 +118,11 @@ func (r *AgentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 // SetupWithManager sets up the controller with the Manager.
 func (r *AgentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&loggerv1beta.Agent{}).
+		For(&loggerv1beta.VectorAgent{}).
+		Watches(
+			&source.Kind{Type: &corev1.ConfigMap{}},
+			&handler.EnqueueRequestForOwner{OwnerType: &loggerv1beta.VectorAgent{}, IsController: true},
+		).
+		WithOptions(controller.Options{MaxConcurrentReconciles: 2}).
 		Complete(r)
 }
