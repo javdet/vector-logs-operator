@@ -9,17 +9,17 @@ version: '3'
 resources:
   - group: logging
     controller: true
-    kind: Agent
+    kind: VectorAgent
     version: v1beta
   - group: logging
     controller: true
-    kind: Agregator
+    kind: VectorAgregator
     version: v1beta
   - group: logging
     controller: true
-    kind: output
+    kind: VectorAgentPipeline
     version: v1beta
   - group: logging
     controller: true
-    kind: flow
+    kind: VectorAgregatorPipeline
     version: v1beta

@@ -66,12 +66,13 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   9443,
-		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "8a02d789.vlo.io",
+		Scheme:                     scheme,
+		MetricsBindAddress:         metricsAddr,
+		Port:                       9443,
+		HealthProbeBindAddress:     probeAddr,
+		LeaderElection:             enableLeaderElection,
+		LeaderElectionID:           "8a02d789.vlo.io",
+		LeaderElectionResourceLock: "configmaps",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -81,11 +82,11 @@ func main() {
 	if err = (&controllers.AgentReconciler{
 		ReconcilerBase: util.NewReconcilerBase(
 			mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(),
-			mgr.GetEventRecorderFor("Agent"), mgr.GetAPIReader(),
+			mgr.GetEventRecorderFor("VectorAgent"), mgr.GetAPIReader(),
 		),
 		Log: ctrl.Log.WithName("controllers").WithName("reconciler"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Agent")
+		setupLog.Error(err, "unable to create controller", "controller", "VectorAgent")
 		os.Exit(1)
 	}
 

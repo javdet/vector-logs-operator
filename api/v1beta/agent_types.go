@@ -37,12 +37,12 @@ type Resources struct {
 	Requests Requests `json:"requests,omitempty"`
 }
 
-// AgentSpec defines the desired state of M2Logstash
-type AgentSpec struct {
+// VectorAgentSpec defines the desired state of VectorAgent
+type VectorAgentSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of M2Logstash. Edit M2Logstash_types.go to remove/update
+	// Foo is an example field of VectorAgent. Edit agent_types.go to remove/update
 	Image                 string    `json:"image,omitempty"`
 	Tag                   string    `json:"tag,omitempty"`
 	Name                  string    `json:"name,omitempty"`
@@ -55,9 +55,9 @@ type AgentSpec struct {
 // +patchStrategy=merge
 // +listType=map
 // +listMapKey=type
-// M2LogstashStatus defines the observed state of Agent
+// VectorAgentStatus defines the observed state of Agent
 
-type AgentStatus struct {
+type VectorAgentStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
@@ -66,20 +66,20 @@ type AgentStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// Agent is the Schema for the agents API
-type Agent struct {
+// VectorAgent is the Schema for the agents API
+type VectorAgent struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AgentSpec   `json:"spec,omitempty"`
-	Status AgentStatus `json:"status,omitempty"`
+	Spec   VectorAgentSpec   `json:"spec,omitempty"`
+	Status VectorAgentStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// M2LogstashList contains a list of M2Logstash
-type AgentList struct {
+// VectorAgentList contains a list of VectorAgent
+type VectorAgentList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Agent `json:"items"`
+	Items           []VectorAgent `json:"items"`
 }
