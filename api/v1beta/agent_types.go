@@ -22,6 +22,7 @@ import (
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
 type Limit struct {
 	Cpu    string `json:"cpu,omitempty"`
 	Memory string `json:"memory,omitempty"`
@@ -38,16 +39,16 @@ type Resources struct {
 }
 
 // VectorAgentSpec defines the desired state of VectorAgent
-type VectorAgentSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of VectorAgent. Edit agent_types.go to remove/update
+// Foo is an example field of VectorAgent. Edit agent_types.go to remove/update
+
+type VectorAgentSpec struct {
 	Image                 string    `json:"image,omitempty"`
 	Tag                   string    `json:"tag,omitempty"`
-	Name                  string    `json:"name,omitempty"`
-	MetricsScrapeInterval int       `json:"metricsScrapteInterval,omitempty"`
-	InternalLogs          bool      `json:",omitempty"`
+	MetricsScrapeInterval int       `json:"metricsScrapeInterval,omitempty"`
+	InternalLogs          bool      `json:"internalLogs,omitempty"`
 	Resources             Resources `json:"resources,omitempty"`
 }
 
@@ -82,4 +83,9 @@ type VectorAgentList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []VectorAgent `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&VectorAgent{}, &VectorAgentList{})
+	SchemeBuilder.Register(&VectorAgentPipeline{}, &VectorAgentPipelineList{})
 }

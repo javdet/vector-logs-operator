@@ -21,12 +21,9 @@ import (
 	"github.com/go-logr/logr"
 	loggerv1beta "github.com/javdet/vector-logs-operator/api/v1beta"
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 type AgentReconciler struct {
@@ -42,14 +39,17 @@ var controllerLog = ctrl.Log.WithName("controller").WithName("VectorAgent")
 // +kubebuilder:rbac:groups=logging.vlo.io,resources=vectoragents/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=namespaces,verbs=get;list;watch
 // +kubebuilder:rbac:groups=apps,resources=daemonsets,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
+// +kubebuilder:rbac:groups=core,resources=nodes,verbs=list;watch
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=serviceaccounts,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterrolebindings,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=extensions,resources=podsecuritypolicies,verbs=use;
-// +kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;update;delete
+// +kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;update;delete;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -72,7 +72,6 @@ func (r *AgentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		log.Error(err, "cannot get object VectorAgent")
 		return ctrl.Result{}, err
-
 	}
 	err := r.CreateOrUpdateResource(ctx, instance, instance.Namespace, r.PipelineConfigMapFromCR(instance))
 	if err != nil {
@@ -119,10 +118,6 @@ func (r *AgentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 func (r *AgentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&loggerv1beta.VectorAgent{}).
-		Watches(
-			&source.Kind{Type: &corev1.ConfigMap{}},
-			&handler.EnqueueRequestForOwner{OwnerType: &loggerv1beta.VectorAgent{}, IsController: true},
-		).
 		WithOptions(controller.Options{MaxConcurrentReconciles: 2}).
 		Complete(r)
 }

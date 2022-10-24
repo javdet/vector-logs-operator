@@ -1,5 +1,5 @@
 # Adds namespace to all resources.
-namespace: vector-logs-operator-system
+namespace: operators
 
 # Value of this field is prepended to the
 # names of all resources, e.g. a deployment named
@@ -9,8 +9,10 @@ namespace: vector-logs-operator-system
 namePrefix: vector-logs-operator-
 
 # Labels to add to all resources and selectors.
-#commonLabels:
-#  someName: someValue
+commonLabels:
+  operator: vector
+  control-plane: vector-operator
+
 
 bases:
 - ../crd

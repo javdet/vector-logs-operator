@@ -34,22 +34,16 @@ spec:
           metadata:
             type: object
           spec:
-            description: VectorAgentSpec defines the desired state of VectorAgent
             properties:
               image:
-                description: Foo is an example field of VectorAgent. Edit agent_types.go
-                  to remove/update
                 type: string
-              metricsScrapteInterval:
+              internalLogs:
+                type: boolean
+              metricsScrapeInterval:
                 type: integer
-              name:
-                type: string
               resources:
                 properties:
                   limits:
-                    description: 'EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO
-                      OWN! NOTE: json tags are required.  Any new fields you add must
-                      have json tags for the fields to be serialized.'
                     properties:
                       cpu:
                         type: string
@@ -66,7 +60,7 @@ spec:
                 type: object
               tag:
                 type: string
-            type: boolean
+            type: object
           status:
             properties:
               conditions:

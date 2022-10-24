@@ -14,7 +14,7 @@ func (r *AgentReconciler) serviceAccountFromCR(instance *loggerv1beta.VectorAgen
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        instance.Spec.Name,
+			Name:        instance.Name,
 			Namespace:   instance.Namespace,
 			Labels:      getLabels("agent"),
 			Annotations: getAnnotations(),
@@ -29,7 +29,7 @@ func (r *AgentReconciler) clusterRoleFromCR(instance *loggerv1beta.VectorAgent) 
 			APIVersion: "rbac.authorization.k8s.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        instance.Spec.Name,
+			Name:        instance.Name,
 			Labels:      getLabels("agent"),
 			Annotations: getAnnotations(),
 		},
@@ -48,19 +48,19 @@ func (r *AgentReconciler) clusterRoleBindingFromCR(instance *loggerv1beta.Vector
 			APIVersion: "rbac.authorization.k8s.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        instance.Spec.Name,
+			Name:        instance.Name,
 			Labels:      getLabels("agent"),
 			Annotations: getAnnotations(),
 		},
 		Subjects: []rbacv1.Subject{{
 			Kind:      "ServiceAccount",
-			Name:      instance.Spec.Name,
+			Name:      instance.Name,
 			Namespace: instance.Namespace,
 		}},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",
 			Kind:     "ClusterRole",
-			Name:     instance.Spec.Name,
+			Name:     instance.Name,
 		},
 	}
 }

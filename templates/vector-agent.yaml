@@ -47,128 +47,131 @@ sinks:
     target: "stdout"
     encoding: "json"
 
-{{- if ne .CRD.Sinks.S3.Bucket "" }}
+{{ range $idx, $sink := .CRD.Sinks }}
+  {{- if ne $sink.S3.Bucket "" }}
   s3:
     type: aws_s3
     inputs:
-      {{ range $index, $input := .CRD.Sinks.S3.Inputs }}
+      {{ range $index, $input := $sink.S3.Inputs }}
       - {{ $input }}
       {{- end }}
-    bucket: {{ .CRD.Sinks.S3.Bucket }}
-    key_prefix: {{ .CRD.Sinks.S3.KeyPrefix }}
-    compression: {{ .CRD.Sinks.S3.Compression }}
+    bucket: {{ $sink.S3.Bucket }}
+    key_prefix: {{ $sink.S3.KeyPrefix }}
+    compression: {{ $sink.S3.Compression }}
     encoding:
-      codec: {{ .CRD.Sinks.S3.Encoding }}
-    region: {{ .CRD.Sinks.S3.Region }}
-    acl: {{ .CRD.Sinks.S3.ACL }}
-    content_type: {{ .CRD.Sinks.S3.ContentType }}
-    {{ if ne .CRD.Sinks.S3.Endpoint "" }}
-    endpoint: {{ .CRD.Sinks.S3.Endpoint }}
+      codec: {{ $sink.S3.Encoding }}
+    region: {{ $sink.S3.Region }}
+    acl: {{ $sink.S3.ACL }}
+    content_type: {{ $sink.S3.ContentType }}
+    {{ if ne $sink.S3.Endpoint "" }}
+    endpoint: {{ $sink.S3.Endpoint }}
     {{- end }}
-{{ else if ne .CRD.Sinks.Console.Target "" }}
+  {{ else if ne $sink.Console.Target "" }}
   console:
     type: console
     inputs:
-      {{ range $index, $input := .CRD.Sinks.Console.Inputs }}
+      {{ range $index, $input := $sink.Console.Inputs }}
       - {{ $input }}
-      {{ - end }}
-    target: {{ .CRD.Sinks.Console.Target }}
+      {{- end }}
+    target: {{ $sink.Console.Target }}
     encoding:
-      codec: {{ .CRD.Sinks.Console.Encoding }}
-{{ else if ne .CRD.Sinks.File.Path "" }}
+      codec: {{ $sink.Console.Encoding }}
+  {{ else if ne $sink.File.Path "" }}
   file:
     type: file
     inputs:
-      {{ range $index, $input := .CRD.Sinks.File.Inputs }}
+      {{ range $index, $input := $sink.File.Inputs }}
       - {{ $input }}
       {{- end }}
-    compression: {{ .CRD.Sinks.File.Compression }}
+    compression: {{ $sink.File.Compression }}
     encoding:
-      codec: {{ .CRD.Sinks.File.Encoding }}
-    path: {{ .CRD.Sinks.File.Path }}
-{{ else if ne .CRD.Sinks.Elasticsearch.Endpoint "" }}
+      codec: {{ $sink.File.Encoding }}
+    path: {{ $sink.File.Path }}
+  {{ else if ne $sink.Elasticsearch.Endpoint "" }}
   elasticsearch:
     type: elasticsearch
     inputs:
-      {{ range $index, $input := .CRD.Sinks.Elasticsearch.Inputs }}
+      {{ range $index, $input := $sink.Elasticsearch.Inputs }}
       - {{ $input }}
       {{- end }}
-    endpoint: {{ .CRD.Sinks.Elasticsearch.Endpoint }}
-    pipeline: {{ .CRD.Sinks.Elasticsearch.Pipeline }}
-    compression: {{ .CRD.Sinks.Elasticsearch.Compression }}
+    endpoint: {{ $sink.Elasticsearch.Endpoint }}
+    pipeline: {{ $sink.Elasticsearch.Pipeline }}
+    compression: {{ $sink.Elasticsearch.Compression }}
     encoding:
-      codec: {{ .CRD.Sinks.Elasticsearch.Encoding }}
-    mode: {{ .CRD.Sinks.Elasticsearch.Mode }}
-    id_key: {{ .CRD.Sinks.Elasticsearch.IdKey }}
-    {{- if ne .CRD.Sinks.Elasticsearch.Secret "" }}
+      codec: {{ $sink.Elasticsearch.Encoding }}
+    mode: {{ $sink.Elasticsearch.Mode }}
+    id_key: {{ $sink.Elasticsearch.IdKey }}
+    {{- if ne $sink.Elasticsearch.Secret "" }}
     auth:
       user: ${ELASTIC_USERNAME}
       password: ${ELASTIC_PASSWORD}
     {{- end }}
-    {{- if ne .CRD.Sinks.Elasticsearch.TLSCA "" }}
+    {{- if ne $sink.Elasticsearch.TLSCA "" }}
     tls:
-      ca_file: {{ .CRD.Sinks.Elasticsearch.TLSCA }}
+      ca_file: {{ $sink.Elasticsearch.TLSCA }}
     {{- end }}
-{{ else if ne .CRD.Sinks.HTTP.URI "" }}
+  {{ else if ne $sink.HTTP.URI "" }}
   http:
     type: http
     inputs:
-      {{ range $index, $input := .CRD.Sinks.HTTP.Inputs }}
+      {{ range $index, $input := $sink.HTTP.Inputs }}
       - {{ $input }}
       {{- end }}
-    uri: {{ .CRD.Sinks.HTTP.URI }}
-    compression: {{ .CRD.Sinks.HTTP.Compression }}
+    uri: {{ $sink.HTTP.URI }}
+    compression: {{ $sink.HTTP.Compression }}
     encoding:
-      codec: {{ .CRD.Sinks.HTTP.encoding }}
-    method: {{ .CRD.Sinks.HTTP.Method }}
-    {{ if ne .CRD.Sinks.HTTP.Secret "" }}
+      codec: {{ $sink.HTTP.encoding }}
+    method: {{ $sink.HTTP.Method }}
+    {{ if ne $sink.HTTP.Secret "" }}
     auth:
       user: ${HTTP_USERNAME}
       password: ${HTTP_PASSWORD}
     {{- end }}
-{{ else if ne .CRD.Sinks.Kafka.Topic "" }}
+  {{ else if ne $sink.Kafka.Topic "" }}
   kafka:
     type: kafka
     inputs:
-      {{ range $index, $input := .CRD.Sinks.Kafka.Inputs }}
+      {{ range $index, $input := $sink.Kafka.Inputs }}
       - {{ $input }}
       {{- end }}
-    bootstrap_servers: {{ .CRD.Sinks.Kafka.BootstrapServers }}
-    key_field: {{ .CRD.Sinks.Kafka.KeyField }}
-    topic: {{ .CRD.Sinks.Kafka.Topic }}
-    compression: {{ .CRD.Sinks.Kafka.Compression }}
+    bootstrap_servers: {{ $sink.Kafka.BootstrapServers }}
+    key_field: {{ $sink.Kafka.KeyField }}
+    topic: {{ $sink.Kafka.Topic }}
+    compression: {{ $sink.Kafka.Compression }}
     encoding:
-      codec: {{ .CRD.Sinks.Kafka.Encoding }}
-   {{ if ne .CRD.Sinks.Kafka.Sasl.Secret "" }}
+      codec: {{ $sink.Kafka.Encoding }}
+    {{ if ne $sink.Kafka.Sasl.Secret "" }}
     sasl:
       enabled: true
-      mechanism: {{ .CRD.Sinks.Kafka.Sasl.Mechanism }}
+      mechanism: {{ $sink.Kafka.Sasl.Mechanism }}
       username: ${KAFKA_USERNAME}
       password: ${KAFKA_PASSWORD}
-{{ else if ne .CRD.Sinks.Loki.Endpoint "" }}
+    {{- end }}
+  {{ else if ne $sink.Loki.Endpoint "" }}
   loki:
     type: loki
     inputs:
-      {{ range $index, $input := .CRD.Sinks.Loki.Inputs }}
+      {{ range $index, $input := $sink.Loki.Inputs }}
       - {{ $input }}
       {{- end }}
-    endpoint: {{ .CRD.Sinks.Loki.Endpoint }}
-    compression: {{ .CRD.Sinks.Loki.Compression }}
+    endpoint: {{ $sink.Loki.Endpoint }}
+    compression: {{ $sink.Loki.Compression }}
     encoding:
-      codec: {{ .CRD.Sinks.Loki.Encoding }}
+      codec: {{ $sink.Loki.Encoding }}
     labels:
-      {{ range $key, $value := .CRD.Sinks.Loki.Labels }}
+      {{ range $key, $value := $sink.Loki.Labels }}
       {{ $key }}: {{ $value }}
       {{- end }}
-    tenant_id: {{ .CRD.Sinks.Loki.TenantId }}
-{{ else if ne .CRD.Sinks.Vector.Address "" }}
+    tenant_id: {{ $sink.Loki.TenantId }}
+  {{ else if ne $sink.Vector.Address "" }}
   vector:
     type: vector
     inputs:
-      {{ range $index, $input := .CRD.Sinks.Vector.Inputs }}
+      {{ range $index, $input := $sink.Vector.Inputs }}
       - {{ $input }}
       {{- end }}
-    address: {{ .CRD.Sinks.Vector.Address }}
-    compression: {{ .CRD.Sinks.Vector.Compression }}
-    version: {{ .CRD.Sinks.Vector.Version }}
+    address: {{ $sink.Vector.Address }}
+    compression: {{ $sink.Vector.Compression }}
+    version: {{ $sink.Vector.Version }}
+  {{- end }}
 {{- end }}

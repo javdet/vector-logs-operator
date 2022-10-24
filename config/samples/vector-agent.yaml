@@ -1,0 +1,17 @@
+apiVersion: logging.vlo.io/v1beta
+kind: VectorAgent
+metadata:
+  name: agent
+  namespace: logging
+spec:
+  image: timberio/vector
+  tag: 0.21.2-distroless-libc
+  metricsScrapeInterval: 15
+  internalLogs: true
+  resources:
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+    requests:
+      cpu: "100m"
+      memory: "256Mi"

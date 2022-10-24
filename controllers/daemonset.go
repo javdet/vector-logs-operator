@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	loggerv1beta "github.com/javdet/vector-logs-operator/api/v1beta"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -18,7 +19,7 @@ func (r *AgentReconciler) daemonSetFromCR(instance *loggerv1beta.VectorAgent) *a
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        instance.Spec.Name,
+			Name:        instance.Name,
 			Namespace:   instance.Namespace,
 			Labels:      getLabels("agent"),
 			Annotations: getAnnotations(),
@@ -33,8 +34,8 @@ func (r *AgentReconciler) daemonSetFromCR(instance *loggerv1beta.VectorAgent) *a
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
-						Name:  instance.Spec.Name,
-						Image: instance.Spec.Image,
+						Name:  instance.Name,
+						Image: fmt.Sprint(instance.Spec.Image, ":", instance.Spec.Tag),
 						Args: []string{
 							"--config-dir",
 							"/etc/vector",
@@ -149,7 +150,7 @@ func (r *AgentReconciler) daemonSetServiceFromCR(instance *loggerv1beta.VectorAg
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      instance.Spec.Name,
+			Name:      instance.Name,
 			Namespace: instance.Namespace,
 			Labels:    getLabels("agent"),
 		},
@@ -179,7 +180,7 @@ func (r *AgentPipelineReconciler) daemonSetFromCR(
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        agent.Spec.Name,
+			Name:        agent.Name,
 			Namespace:   agent.Namespace,
 			Labels:      getLabels("agent"),
 			Annotations: getAnnotations(),
@@ -194,8 +195,8 @@ func (r *AgentPipelineReconciler) daemonSetFromCR(
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
-						Name:  agent.Spec.Name,
-						Image: agent.Spec.Image,
+						Name:  agent.Name,
+						Image: fmt.Sprint(agent.Spec.Image, ":", agent.Spec.Tag),
 						Args: []string{
 							"--config-dir",
 							"/etc/vector",

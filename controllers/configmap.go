@@ -52,7 +52,7 @@ func (r *AgentReconciler) PipelineConfigMapFromCR(instance *loggerv1beta.VectorA
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        fmt.Sprint(instance.Spec.Name),
+			Name:        fmt.Sprint(instance.Name),
 			Namespace:   instance.GetNamespace(),
 			Labels:      getLabels("agent"),
 			Annotations: getAnnotations(),
@@ -62,27 +62,60 @@ func (r *AgentReconciler) PipelineConfigMapFromCR(instance *loggerv1beta.VectorA
 }
 
 func (r *AgentReconciler) getPipelineConfigData(instance *loggerv1beta.VectorAgent) (map[string]string, error) {
+	log := r.Log.WithName("creator").WithName("configmap")
+	controllerLog.Info("Get configmap data", "instance", instance)
+
 	var data = make(map[string]string)
 	var vectorTpl bytes.Buffer
 
 	templ, err := template.ParseFiles("templates/vector-agent.yaml")
 	if err != nil {
+		log.Error(err, "failed parse config template", "template", "vector.yaml")
 		return nil, err
 	}
 	pipeline := VectorAgentPipeline{
 		Sources: PipelineSources{
 			Metrics: PipelineSourcesMetrics{
-				Namespace: instance.Spec.Name,
+				Namespace: instance.Name,
 			},
 		},
 		Sinks: PipelineSinks{
 			Prometheus: PipelineSinksPrometheus{
-				Namespace: instance.Spec.Name,
+				Namespace: instance.Name,
 			},
+		},
+		CRD: loggerv1beta.VectorAgentPipelineSpec{
+			Sinks: []loggerv1beta.VectorPipelineSinks{{
+				S3: loggerv1beta.VectorPipelineSinksS3{
+					Bucket: "",
+				},
+				Console: loggerv1beta.VectorPipelineSinksConsole{
+					Target: "",
+				},
+				File: loggerv1beta.VectorPipelineSinksFile{
+					Path: "",
+				},
+				Elasticsearch: loggerv1beta.VectorPipelineSinksElasticsearch{
+					Endpoint: "",
+				},
+				HTTP: loggerv1beta.VectorPipelineSinksHTTP{
+					URI: "",
+				},
+				Kafka: loggerv1beta.VectorPipelineSinksKafka{
+					Topic: "",
+				},
+				Loki: loggerv1beta.VectorPipelineSinksLoki{
+					Endpoint: "",
+				},
+				Vector: loggerv1beta.VectorPipelineSinksVector{
+					Address: "",
+				},
+			}},
 		},
 	}
 
 	if err := templ.Execute(&vectorTpl, pipeline); err != nil {
+		log.Error(err, "failed generate config file", "template", "vector.yaml")
 		return nil, err
 	}
 	data["vector.yaml"] = vectorTpl.String()

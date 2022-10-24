@@ -25,6 +25,9 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 type AgentPipelineReconciler struct {
@@ -53,33 +56,65 @@ func (r *AgentPipelineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	controllerAgentPipelineLog.Info("start reconcile", "request", req.NamespacedName)
 
 	instance := &loggerv1beta.VectorAgentPipeline{}
-	if err := r.GetClient().Get(ctx, req.NamespacedName, instance); err != nil {
-		if apierrors.IsNotFound(err) {
+	if req.NamespacedName.Namespace == "" {
+		namespace := &corev1.Namespace{}
+		if err := r.GetClient().Get(ctx, req.NamespacedName, namespace); err != nil {
+			if apierrors.IsNotFound(err) {
+				return ctrl.Result{}, nil
+			}
+			controllerLog.Error(err, "Cannot get object Namespace")
+			return ctrl.Result{}, err
+		}
+
+		instanceList := &loggerv1beta.VectorAgentPipelineList{}
+		err := r.GetClient().List(ctx, instanceList)
+		if err != nil {
 			return ctrl.Result{}, nil
 		}
-		controllerAgentPipelineLog.Error(err, "cannot get object M2LogstashPipeline")
-		return ctrl.Result{}, err
+		instance = &instanceList.Items[0]
+
 	} else {
-		nameSpaceList := &corev1.NamespaceList{}
-		opts := []client.ListOption{
-			client.MatchingLabels{"vlo.io/logs": "true"},
+		if err := r.GetClient().Get(ctx, req.NamespacedName, instance); err != nil {
+			if apierrors.IsNotFound(err) {
+				return ctrl.Result{}, nil
+			}
+			controllerAgentPipelineLog.Error(err, "cannot get object M2LogstashPipeline")
+			return ctrl.Result{}, err
 		}
-		if err := r.GetClient().List(ctx, nameSpaceList, opts...); err != nil {
-			return r.ManageError(ctx, instance, err)
-		}
-		var namespaces []string
-		for _, item := range nameSpaceList.Items {
-			namespaces = append(namespaces, item.Name)
-		}
-		err, response := r.syncPipelineResources(ctx, *instance, namespaces)
-		if err != nil {
-			controllerAgentPipelineLog.Error(err, response)
-			return r.ManageError(ctx, instance, err)
-		}
+	}
+
+	nameSpaceList := &corev1.NamespaceList{}
+	opts := []client.ListOption{
+		client.MatchingLabels{"vlo.io/logs": "true"},
+	}
+	if err := r.GetClient().List(ctx, nameSpaceList, opts...); err != nil {
+		return r.ManageError(ctx, instance, err)
+	}
+	var namespaces []string
+	for _, item := range nameSpaceList.Items {
+		namespaces = append(namespaces, item.Name)
+	}
+	err, response := r.syncPipelineResources(ctx, *instance, namespaces)
+	if err != nil {
+		controllerAgentPipelineLog.Error(err, response)
+		return r.ManageError(ctx, instance, err)
 	}
 
 	controllerLog.Info("finish reconcile", "request", req.NamespacedName)
 	return ctrl.Result{}, nil
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *AgentPipelineReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&loggerv1beta.VectorAgentPipeline{}).
+		Watches(
+			&source.Kind{Type: &corev1.Namespace{}},
+			&handler.EnqueueRequestForObject{},
+		).
+		WithEventFilter(namespaceFilter()).
+		WithOptions(controller.Options{MaxConcurrentReconciles: 2}).
+		Complete(r)
 }
 
 func (r *AgentPipelineReconciler) syncPipelineResources(
@@ -103,7 +138,7 @@ func (r *AgentPipelineReconciler) syncPipelineResources(
 			ctx,
 			&instance,
 			agent.Namespace,
-			r.PipelineConfigMapFromCR(&instance, agent.Spec.Name, agent.Namespace, namespaces),
+			r.PipelineConfigMapFromCR(&instance, agent.Name, agent.Namespace, namespaces),
 		)
 		if err != nil {
 			return err, "Cannot update pipeline "
