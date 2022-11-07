@@ -16,19 +16,18 @@ sources:
   logs:
     type: internal_logs
 
+{{ if .Transforms.Filter.Namespaces }}
 transforms:
-{{- if .Transforms.Filter.Namespaces }}
   namespaces:
     type: filter
     inputs:
       - kubernetes
-    condition: |-
-      {{ range $index, $namespace := .Transforms.Filters.Namespaces }}
-      .kubernetes.namespace_name = "{{ $namespace }}" ||
-      {{- end }}
-{{- end }}
-
-{{- if ne .CRD.Transforms "" }}
+    condition: {{range $index, $namespace := .Transforms.Filter.Namespaces }}{{if $index}} || {{end}}.kubernetes.namespace_name == "{{ $namespace }}"{{ end }}
+  {{- if ne .CRD.Transforms "" }}
+  {{ .CRD.Transforms }}
+  {{- end }}
+{{- else if ne .CRD.Transforms "" }}
+transforms:
   {{ .CRD.Transforms }}
 {{- end }}
 
@@ -40,19 +39,19 @@ sinks:
     address: 0.0.0.0:9100
     default_namespace: {{ .Sinks.Prometheus.Namespace }}
 
-  logs:
+  console_logs:
     type: "console"
     inputs:
       - logs
     target: "stdout"
     encoding: "json"
 
-{{ range $idx, $sink := .CRD.Sinks }}
-  {{- if ne $sink.S3.Bucket "" }}
-  s3:
+{{- range $idx, $sink := .CRD.Sinks }}
+  {{ if ne $sink.S3.Bucket "" }}
+  {{ $sink.S3.Name }}:
     type: aws_s3
     inputs:
-      {{ range $index, $input := $sink.S3.Inputs }}
+      {{- range $index, $input := $sink.S3.Inputs }}
       - {{ $input }}
       {{- end }}
     bucket: {{ $sink.S3.Bucket }}
@@ -66,32 +65,35 @@ sinks:
     {{ if ne $sink.S3.Endpoint "" }}
     endpoint: {{ $sink.S3.Endpoint }}
     {{- end }}
-  {{ else if ne $sink.Console.Target "" }}
-  console:
+  {{- end }}
+  {{ if ne $sink.Console.Target "" }}
+  {{ $sink.Console.Name }}:
     type: console
     inputs:
-      {{ range $index, $input := $sink.Console.Inputs }}
+      {{- range $index, $input := $sink.Console.Inputs }}
       - {{ $input }}
       {{- end }}
     target: {{ $sink.Console.Target }}
     encoding:
       codec: {{ $sink.Console.Encoding }}
-  {{ else if ne $sink.File.Path "" }}
-  file:
+  {{- end }}
+  {{ if ne $sink.File.Path "" }}
+  {{ $sink.File.Name }}:
     type: file
     inputs:
-      {{ range $index, $input := $sink.File.Inputs }}
+      {{- range $index, $input := $sink.File.Inputs }}
       - {{ $input }}
       {{- end }}
     compression: {{ $sink.File.Compression }}
     encoding:
       codec: {{ $sink.File.Encoding }}
     path: {{ $sink.File.Path }}
-  {{ else if ne $sink.Elasticsearch.Endpoint "" }}
-  elasticsearch:
+  {{- end }}
+  {{ if ne $sink.Elasticsearch.Endpoint "" }}
+  {{ $sink.Elasticsearch.Name }}:
     type: elasticsearch
     inputs:
-      {{ range $index, $input := $sink.Elasticsearch.Inputs }}
+      {{- range $index, $input := $sink.Elasticsearch.Inputs }}
       - {{ $input }}
       {{- end }}
     endpoint: {{ $sink.Elasticsearch.Endpoint }}
@@ -110,11 +112,12 @@ sinks:
     tls:
       ca_file: {{ $sink.Elasticsearch.TLSCA }}
     {{- end }}
-  {{ else if ne $sink.HTTP.URI "" }}
-  http:
+  {{- end }}
+  {{ if ne $sink.HTTP.URI "" }}
+  {{ $sink.HTTP.Name }}:
     type: http
     inputs:
-      {{ range $index, $input := $sink.HTTP.Inputs }}
+      {{- range $index, $input := $sink.HTTP.Inputs }}
       - {{ $input }}
       {{- end }}
     uri: {{ $sink.HTTP.URI }}
@@ -127,31 +130,35 @@ sinks:
       user: ${HTTP_USERNAME}
       password: ${HTTP_PASSWORD}
     {{- end }}
-  {{ else if ne $sink.Kafka.Topic "" }}
-  kafka:
+  {{- end }}
+  {{ if ne $sink.Kafka.Topic "" }}
+  {{ $sink.Kafka.Name }}:
     type: kafka
     inputs:
-      {{ range $index, $input := $sink.Kafka.Inputs }}
+      {{- range $index, $input := $sink.Kafka.Inputs }}
       - {{ $input }}
       {{- end }}
     bootstrap_servers: {{ $sink.Kafka.BootstrapServers }}
+    {{- if ne $sink.Kafka.KeyField "" }}
     key_field: {{ $sink.Kafka.KeyField }}
-    topic: {{ $sink.Kafka.Topic }}
+    {{- end }}
+    topic: '{{ $sink.Kafka.Topic }}'
     compression: {{ $sink.Kafka.Compression }}
     encoding:
       codec: {{ $sink.Kafka.Encoding }}
-    {{ if ne $sink.Kafka.Sasl.Secret "" }}
+    {{- if ne $sink.Kafka.Sasl.Secret "" }}
     sasl:
       enabled: true
       mechanism: {{ $sink.Kafka.Sasl.Mechanism }}
       username: ${KAFKA_USERNAME}
       password: ${KAFKA_PASSWORD}
     {{- end }}
-  {{ else if ne $sink.Loki.Endpoint "" }}
-  loki:
+  {{- end }}
+  {{ if ne $sink.Loki.Endpoint "" }}
+  {{ $sink.Loki.Name }}:
     type: loki
     inputs:
-      {{ range $index, $input := $sink.Loki.Inputs }}
+      {{- range $index, $input := $sink.Loki.Inputs }}
       - {{ $input }}
       {{- end }}
     endpoint: {{ $sink.Loki.Endpoint }}
@@ -163,11 +170,12 @@ sinks:
       {{ $key }}: {{ $value }}
       {{- end }}
     tenant_id: {{ $sink.Loki.TenantId }}
-  {{ else if ne $sink.Vector.Address "" }}
-  vector:
+  {{- end }}
+  {{ if ne $sink.Vector.Address "" }}
+  {{ $sink.Vector.Name }}:
     type: vector
     inputs:
-      {{ range $index, $input := $sink.Vector.Inputs }}
+      {{- range $index, $input := $sink.Vector.Inputs }}
       - {{ $input }}
       {{- end }}
     address: {{ $sink.Vector.Address }}

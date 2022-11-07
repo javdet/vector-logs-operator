@@ -3,11 +3,14 @@ kind: VectorAgent
 metadata:
   name: agent
   namespace: logging
+  labels:
+    logging: vector-agent
 spec:
   image: timberio/vector
   tag: 0.21.2-distroless-libc
   metricsScrapeInterval: 15
   internalLogs: true
+  logLevel: info
   resources:
     limits:
       cpu: "1"

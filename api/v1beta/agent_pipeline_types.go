@@ -41,6 +41,7 @@ type VectorPipelineSinks struct {
 }
 
 type VectorPipelineSinksS3 struct {
+	Name                 string   `json:"name"`
 	Inputs               []string `json:"inputs"`
 	Bucket               string   `json:"bucket"`
 	Region               string   `json:"region"`
@@ -55,12 +56,14 @@ type VectorPipelineSinksS3 struct {
 }
 
 type VectorPipelineSinksConsole struct {
+	Name     string   `json:"name"`
 	Inputs   []string `json:"inputs"`
 	Target   string   `json:"target"`
 	Encoding string   `json:"encoding,omitempty"`
 }
 
 type VectorPipelineSinksFile struct {
+	Name        string   `json:"name"`
 	Inputs      []string `json:"inputs"`
 	Compression string   `json:"compression,omitempty"`
 	Path        string   `json:"path"`
@@ -68,6 +71,7 @@ type VectorPipelineSinksFile struct {
 }
 
 type VectorPipelineSinksElasticsearch struct {
+	Name        string   `json:"name"`
 	Inputs      []string `json:"inputs"`
 	Compression string   `json:"compression,omitempty"`
 	Endpoint    string   `json:"endpoint"`
@@ -79,6 +83,7 @@ type VectorPipelineSinksElasticsearch struct {
 }
 
 type VectorPipelineSinksHTTP struct {
+	Name        string   `json:"name"`
 	Inputs      []string `json:"inputs"`
 	Compression string   `json:"compression,omitempty"`
 	URI         string   `json:"uri"`
@@ -89,6 +94,7 @@ type VectorPipelineSinksHTTP struct {
 }
 
 type VectorPipelineSinksKafka struct {
+	Name             string                       `json:"name"`
 	Inputs           []string                     `json:"inputs"`
 	BootstrapServers string                       `json:"bootstrapServers"`
 	KeyField         string                       `json:"keyField,omitempty"`
@@ -104,6 +110,7 @@ type VectorPipelineSinksKafkaSasl struct {
 }
 
 type VectorPipelineSinksLoki struct {
+	Name         string            `json:"name"`
 	Inputs       []string          `json:"inputs"`
 	Endpoint     string            `json:"endpoint"`
 	Labels       map[string]string `json:"labels"`
@@ -114,6 +121,7 @@ type VectorPipelineSinksLoki struct {
 }
 
 type VectorPipelineSinksVector struct {
+	Name        string   `json:"name"`
 	Inputs      []string `json:"inputs"`
 	Address     string   `json:"address"`
 	Compression string   `json:"compression,omitempty"`

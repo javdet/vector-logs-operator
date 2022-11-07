@@ -62,7 +62,6 @@ func (r *AgentReconciler) PipelineConfigMapFromCR(instance *loggerv1beta.VectorA
 }
 
 func (r *AgentReconciler) getPipelineConfigData(instance *loggerv1beta.VectorAgent) (map[string]string, error) {
-	log := r.Log.WithName("creator").WithName("configmap")
 	controllerLog.Info("Get configmap data", "instance", instance)
 
 	var data = make(map[string]string)
@@ -70,7 +69,7 @@ func (r *AgentReconciler) getPipelineConfigData(instance *loggerv1beta.VectorAge
 
 	templ, err := template.ParseFiles("templates/vector-agent.yaml")
 	if err != nil {
-		log.Error(err, "failed parse config template", "template", "vector.yaml")
+		controllerLog.Error(err, "failed parse config template", "template", "vector.yaml")
 		return nil, err
 	}
 	pipeline := VectorAgentPipeline{
@@ -115,10 +114,11 @@ func (r *AgentReconciler) getPipelineConfigData(instance *loggerv1beta.VectorAge
 	}
 
 	if err := templ.Execute(&vectorTpl, pipeline); err != nil {
-		log.Error(err, "failed generate config file", "template", "vector.yaml")
+		controllerLog.Error(err, "failed generate config file", "template", "vector.yaml")
 		return nil, err
 	}
 	data["vector.yaml"] = vectorTpl.String()
+	controllerLog.Info("Finish getting configmap data", "instance", instance)
 
 	return data, nil
 }
@@ -129,6 +129,7 @@ func (r *AgentPipelineReconciler) PipelineConfigMapFromCR(
 	if err != nil {
 		return nil
 	}
+
 	return &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -146,6 +147,7 @@ func (r *AgentPipelineReconciler) PipelineConfigMapFromCR(
 
 func (r *AgentPipelineReconciler) getPipelineConfigData(
 	instance *loggerv1beta.VectorAgentPipeline, vector string, namespaces []string) (map[string]string, error) {
+	controllerAgentPipelineLog.Info("Get configmap data", "instance", instance)
 	var data = make(map[string]string)
 	var vectorTpl bytes.Buffer
 
@@ -173,9 +175,10 @@ func (r *AgentPipelineReconciler) getPipelineConfigData(
 	}
 
 	if err := templ.Execute(&vectorTpl, pipeline); err != nil {
+		controllerAgentPipelineLog.Error(err, "failed generate config file", "template", "vector.yaml")
 		return nil, err
 	}
 	data["vector.yaml"] = vectorTpl.String()
-
+	controllerAgentPipelineLog.Info("Finish getting configmap data", "instance", instance)
 	return data, nil
 }

@@ -55,6 +55,8 @@ spec:
                           type: array
                         method:
                           type: string
+                        name:
+                          type: string
                         secret:
                           type: string
                         tlsCA:
@@ -63,6 +65,7 @@ spec:
                           type: string
                       required:
                       - inputs
+                      - name
                       - uri
                       type: object
                     console:
@@ -73,10 +76,13 @@ spec:
                           items:
                             type: string
                           type: array
+                        name:
+                          type: string
                         target:
                           type: string
                       required:
                       - inputs
+                      - name
                       - target
                       type: object
                     elasticsearch:
@@ -93,6 +99,8 @@ spec:
                           type: array
                         mode:
                           type: string
+                        name:
+                          type: string
                         pipeline:
                           type: string
                         secret:
@@ -102,6 +110,7 @@ spec:
                       required:
                       - endpoint
                       - inputs
+                      - name
                       type: object
                     file:
                       properties:
@@ -113,10 +122,13 @@ spec:
                           items:
                             type: string
                           type: array
+                        name:
+                          type: string
                         path:
                           type: string
                       required:
                       - inputs
+                      - name
                       - path
                       type: object
                     kafka:
@@ -133,6 +145,8 @@ spec:
                           type: array
                         keyField:
                           type: string
+                        name:
+                          type: string
                         sasl:
                           properties:
                             mechanism:
@@ -148,6 +162,7 @@ spec:
                       required:
                       - bootstrapServers
                       - inputs
+                      - name
                       - topic
                       type: object
                     loki:
@@ -168,6 +183,8 @@ spec:
                           additionalProperties:
                             type: string
                           type: object
+                        name:
+                          type: string
                         tenantId:
                           type: string
                       required:
@@ -175,6 +192,7 @@ spec:
                       - exceptFields
                       - inputs
                       - labels
+                      - name
                       type: object
                     s3:
                       properties:
@@ -196,6 +214,8 @@ spec:
                           type: array
                         keyPrefix:
                           type: string
+                        name:
+                          type: string
                         region:
                           type: string
                         secret:
@@ -206,6 +226,7 @@ spec:
                       - acl
                       - bucket
                       - inputs
+                      - name
                       - region
                       - secret
                       - serverSideEncryption
@@ -220,11 +241,14 @@ spec:
                           items:
                             type: string
                           type: array
+                        name:
+                          type: string
                         version:
                           type: string
                       required:
                       - address
                       - inputs
+                      - name
                       - version
                       type: object
                   type: object

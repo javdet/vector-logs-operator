@@ -7,3 +7,4 @@ bin/
 build/
 chart/
 docs/
+vector-secret.yaml

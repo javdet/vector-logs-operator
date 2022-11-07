@@ -49,6 +49,7 @@ type VectorAgentSpec struct {
 	Tag                   string    `json:"tag,omitempty"`
 	MetricsScrapeInterval int       `json:"metricsScrapeInterval,omitempty"`
 	InternalLogs          bool      `json:"internalLogs,omitempty"`
+	LogLevel              string    `json:"logLevel,omitempty"`
 	Resources             Resources `json:"resources,omitempty"`
 }
 

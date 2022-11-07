@@ -8,6 +8,7 @@ import (
 )
 
 func (r *AgentReconciler) serviceAccountFromCR(instance *loggerv1beta.VectorAgent) *corev1.ServiceAccount {
+	controllerLog.Info("Create ServiceAccount", "instance", instance)
 	return &corev1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServiceAccount",
@@ -23,6 +24,7 @@ func (r *AgentReconciler) serviceAccountFromCR(instance *loggerv1beta.VectorAgen
 }
 
 func (r *AgentReconciler) clusterRoleFromCR(instance *loggerv1beta.VectorAgent) *rbacv1.ClusterRole {
+	controllerLog.Info("Create ClusterRole", "instance", instance)
 	return &rbacv1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ClusterRole",
@@ -42,6 +44,7 @@ func (r *AgentReconciler) clusterRoleFromCR(instance *loggerv1beta.VectorAgent) 
 }
 
 func (r *AgentReconciler) clusterRoleBindingFromCR(instance *loggerv1beta.VectorAgent) *rbacv1.ClusterRoleBinding {
+	controllerLog.Info("Create cluster ClusterRoleBinding", "instance", instance)
 	return &rbacv1.ClusterRoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ClusterRoleBinding",

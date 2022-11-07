@@ -1,0 +1,34 @@
+apiVersion: logging.vlo.io/v1beta
+kind: VectorAgentPipeline
+metadata:
+  name: agent-pipeline
+  namespace: logging
+spec:
+  sinks:
+    - kafka:
+        name: kafka
+        inputs:
+          - kubernetes
+        bootstrapServers: "rc1a-ks2s3o2ucn6n04hc.mdb.yandexcloud.net:9092,rc1b-u5h85la604c4siqs.mdb.yandexcloud.net:9092,rc1c-paiipeq5egsas1lv.mdb.yandexcloud.net:9092"
+        topic: '{{kubernetes.namespace_name}}-dev'
+        compression: snappy
+        encoding: json
+        sasl:
+          mechanism: SCRAM-SHA-512
+          secret: log-kafka
+  transforms: |
+    add:
+        type: remap
+        inputs:
+          - kubernetes
+        source: |-
+          .log = .message
+          .topic = .kubernetes.namespace_name
+          .@timestamp = .timestamp
+          del(.timestamp)
+          del(.file)
+          del(.source_type)
+          del(.kubernetes.namespace_labels)
+          del(.message)
+  selector:
+    logging: vector-agent

@@ -11,6 +11,7 @@ import (
 )
 
 func (r *AgentReconciler) daemonSetFromCR(instance *loggerv1beta.VectorAgent) *appsv1.DaemonSet {
+	controllerLog.Info("Create daemonset", "instance", instance)
 	var secrets = []loggerv1beta.VectorPipelineSinks{}
 
 	return &appsv1.DaemonSet{
@@ -66,6 +67,33 @@ func (r *AgentReconciler) daemonSetFromCR(instance *loggerv1beta.VectorAgent) *a
 						}, {
 							Name:  "SYSFS_ROOT",
 							Value: "/host/sys",
+						}, {
+							Name:  "VECTOR_LOG",
+							Value: instance.Spec.LogLevel,
+						}, {
+							Name: "VECTOR_SELF_NODE_NAME",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									APIVersion: "v1",
+									FieldPath:  "spec.nodeName",
+								},
+							},
+						}, {
+							Name: "VECTOR_SELF_POD_NAME",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									APIVersion: "v1",
+									FieldPath:  "metadata.name",
+								},
+							},
+						}, {
+							Name: "VECTOR_SELF_POD_NAMESPACE",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									APIVersion: "v1",
+									FieldPath:  "metadata.namespace",
+								},
+							},
 						}},
 						EnvFrom: getSecrets(secrets),
 						VolumeMounts: []corev1.VolumeMount{{
@@ -144,6 +172,7 @@ func (r *AgentReconciler) daemonSetFromCR(instance *loggerv1beta.VectorAgent) *a
 }
 
 func (r *AgentReconciler) daemonSetServiceFromCR(instance *loggerv1beta.VectorAgent) *corev1.Service {
+	controllerLog.Info("Create service", "instance", instance)
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -173,6 +202,7 @@ func (r *AgentReconciler) daemonSetServiceFromCR(instance *loggerv1beta.VectorAg
 
 func (r *AgentPipelineReconciler) daemonSetFromCR(
 	instance *loggerv1beta.VectorAgentPipeline, agent *loggerv1beta.VectorAgent) *appsv1.DaemonSet {
+	controllerLog.Info("Update daemonset", "instance", instance)
 
 	return &appsv1.DaemonSet{
 		TypeMeta: metav1.TypeMeta{
@@ -227,6 +257,33 @@ func (r *AgentPipelineReconciler) daemonSetFromCR(
 						}, {
 							Name:  "SYSFS_ROOT",
 							Value: "/host/sys",
+						}, {
+							Name:  "VECTOR_LOG",
+							Value: agent.Spec.LogLevel,
+						}, {
+							Name: "VECTOR_SELF_NODE_NAME",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									APIVersion: "v1",
+									FieldPath:  "spec.nodeName",
+								},
+							},
+						}, {
+							Name: "VECTOR_SELF_POD_NAME",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									APIVersion: "v1",
+									FieldPath:  "metadata.name",
+								},
+							},
+						}, {
+							Name: "VECTOR_SELF_POD_NAMESPACE",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									APIVersion: "v1",
+									FieldPath:  "metadata.namespace",
+								},
+							},
 						}},
 						EnvFrom: getSecrets(instance.Spec.Sinks),
 						VolumeMounts: []corev1.VolumeMount{{
@@ -258,7 +315,7 @@ func (r *AgentPipelineReconciler) daemonSetFromCR(
 						Name: "config",
 						VolumeSource: corev1.VolumeSource{
 							ConfigMap: &corev1.ConfigMapVolumeSource{
-								LocalObjectReference: corev1.LocalObjectReference{Name: instance.Name},
+								LocalObjectReference: corev1.LocalObjectReference{Name: agent.Name},
 							},
 						},
 					}, {
@@ -297,7 +354,7 @@ func (r *AgentPipelineReconciler) daemonSetFromCR(
 							},
 						},
 					}},
-					ServiceAccountName: instance.Name,
+					ServiceAccountName: agent.Name,
 				},
 			},
 		},

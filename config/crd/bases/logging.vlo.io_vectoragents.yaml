@@ -39,6 +39,8 @@ spec:
                 type: string
               internalLogs:
                 type: boolean
+              logLevel:
+                type: string
               metricsScrapeInterval:
                 type: integer
               resources:

@@ -121,10 +121,6 @@ func namespaceFilter() predicate.Predicate {
 			if ok {
 				response = true
 			}
-			_, ok = deleteEvent.Object.(*loggerv1beta.VectorAgentPipeline)
-			if ok {
-				response = true
-			}
 			return response
 		},
 	}

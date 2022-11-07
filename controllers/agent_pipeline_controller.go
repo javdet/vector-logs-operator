@@ -55,14 +55,15 @@ var controllerAgentPipelineLog = ctrl.Log.WithName("controller").WithName("Vecto
 func (r *AgentPipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	controllerAgentPipelineLog.Info("start reconcile", "request", req.NamespacedName)
 
-	instance := &loggerv1beta.VectorAgentPipeline{}
+	var instance = &loggerv1beta.VectorAgentPipeline{}
 	if req.NamespacedName.Namespace == "" {
+		controllerAgentPipelineLog.Info("Namespace event", "request", req.NamespacedName)
 		namespace := &corev1.Namespace{}
 		if err := r.GetClient().Get(ctx, req.NamespacedName, namespace); err != nil {
 			if apierrors.IsNotFound(err) {
 				return ctrl.Result{}, nil
 			}
-			controllerLog.Error(err, "Cannot get object Namespace")
+			controllerAgentPipelineLog.Error(err, "Cannot get object Namespace")
 			return ctrl.Result{}, err
 		}
 
@@ -71,21 +72,25 @@ func (r *AgentPipelineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		if err != nil {
 			return ctrl.Result{}, nil
 		}
-		instance = &instanceList.Items[0]
-
+		if len(instanceList.Items) > 0 {
+			instance = &instanceList.Items[0]
+		} else {
+			controllerAgentPipelineLog.Info("cannot get object AgentPipeline")
+			return ctrl.Result{}, nil
+		}
 	} else {
 		if err := r.GetClient().Get(ctx, req.NamespacedName, instance); err != nil {
 			if apierrors.IsNotFound(err) {
 				return ctrl.Result{}, nil
 			}
-			controllerAgentPipelineLog.Error(err, "cannot get object M2LogstashPipeline")
+			controllerAgentPipelineLog.Error(err, "cannot get object AgentPipeline")
 			return ctrl.Result{}, err
 		}
 	}
 
 	nameSpaceList := &corev1.NamespaceList{}
 	opts := []client.ListOption{
-		client.MatchingLabels{"vlo.io/logs": "true"},
+		client.MatchingLabels{nsLabel: "true"},
 	}
 	if err := r.GetClient().List(ctx, nameSpaceList, opts...); err != nil {
 		return r.ManageError(ctx, instance, err)
@@ -100,7 +105,7 @@ func (r *AgentPipelineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return r.ManageError(ctx, instance, err)
 	}
 
-	controllerLog.Info("finish reconcile", "request", req.NamespacedName)
+	controllerAgentPipelineLog.Info("finish reconcile", "request", req.NamespacedName)
 	return ctrl.Result{}, nil
 }
 
@@ -119,7 +124,7 @@ func (r *AgentPipelineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *AgentPipelineReconciler) syncPipelineResources(
 	ctx context.Context, instance loggerv1beta.VectorAgentPipeline, namespaces []string) (error, string) {
-	controllerAgentPipelineLog.Info("Sync instance resources", "instance", instance.GetName())
+	controllerAgentPipelineLog.Info("Sync pipeline resources", "instance", instance.GetName())
 	agentList := &loggerv1beta.VectorAgentList{}
 
 	var matchingLabels client.MatchingLabels
@@ -141,7 +146,7 @@ func (r *AgentPipelineReconciler) syncPipelineResources(
 			r.PipelineConfigMapFromCR(&instance, agent.Name, agent.Namespace, namespaces),
 		)
 		if err != nil {
-			return err, "Cannot update pipeline "
+			return err, "Cannot update pipeline"
 		}
 
 		err = r.CreateOrUpdateResource(
@@ -150,6 +155,9 @@ func (r *AgentPipelineReconciler) syncPipelineResources(
 			agent.Namespace,
 			r.daemonSetFromCR(&instance, &agent),
 		)
+		if err != nil {
+			return err, "Cannot update daemonset"
+		}
 	}
 
 	return nil, "Success"
