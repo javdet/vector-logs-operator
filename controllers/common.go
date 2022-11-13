@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"bytes"
 	"fmt"
 	loggerv1beta "github.com/javdet/vector-logs-operator/api/v1beta"
+	"html/template"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -13,10 +15,11 @@ const nsLabel = "vlo.io/logs"
 // getLabels get common labels
 func getLabels(namespace string) map[string]string {
 	return map[string]string{
-		"operator":                   "vector",
-		"control-plane":              "vector-operator",
-		"app.kubernetes.io/instance": fmt.Sprint("vector-", namespace),
-		"app.kubernetes.io/name":     "vector",
+		"operator":                    "vector",
+		"control-plane":               "vector-operator",
+		"app.kubernetes.io/instance":  fmt.Sprint("vector-", namespace),
+		"app.kubernetes.io/name":      "vector",
+		"app.kubernetes.io/component": "Agent",
 	}
 }
 
@@ -31,17 +34,17 @@ func getSecrets(pipeline []loggerv1beta.VectorPipelineSinks) []corev1.EnvFromSou
 	var secrets = []corev1.EnvFromSource{}
 
 	for _, item := range pipeline {
-		if item.Elasticsearch.Secret != "" {
-			secrets = append(secrets, getSecretRef(item.Elasticsearch.Secret))
+		if item.Elasticsearch.Secret.Name != "" {
+			secrets = append(secrets, getSecretRef(item.Elasticsearch.Secret.Name))
 		}
-		if item.HTTP.Secret != "" {
-			secrets = append(secrets, getSecretRef(item.HTTP.Secret))
+		if item.HTTP.Secret.Name != "" {
+			secrets = append(secrets, getSecretRef(item.HTTP.Secret.Name))
 		}
-		if item.Kafka.Sasl.Secret != "" {
-			secrets = append(secrets, getSecretRef(item.Kafka.Sasl.Secret))
+		if item.Kafka.Sasl.Secret.Name != "" {
+			secrets = append(secrets, getSecretRef(item.Kafka.Sasl.Secret.Name))
 		}
-		if item.S3.Secret != "" {
-			secrets = append(secrets, getSecretRef(item.S3.Secret))
+		if item.S3.Secret.Name != "" {
+			secrets = append(secrets, getSecretRef(item.S3.Secret.Name))
 		}
 	}
 
@@ -124,4 +127,43 @@ func namespaceFilter() predicate.Predicate {
 			return response
 		},
 	}
+}
+
+func getPipelineConfigData(
+	agent *loggerv1beta.VectorAgent, agentPipeline *loggerv1beta.VectorAgentPipeline, namespaces []string) (map[string]string, error) {
+	var data = make(map[string]string)
+	var vectorTpl bytes.Buffer
+
+	pipeline := VectorAgentPipeline{
+		Sources: PipelineSources{
+			Kubernetes: PipelineSourcesKubernetes{
+				PodAnnotations: agent.Spec.PodAnnotations,
+			},
+		},
+		Sinks: PipelineSinks{
+			Prometheus: PipelineSinksPrometheus{
+				Namespace: agent.Name,
+			},
+		},
+		Transforms: PipelineTransforms{
+			Filter: PipelineTransformsFilter{
+				Namespaces: namespaces,
+			},
+		},
+		CRD: agentPipeline.Spec,
+	}
+
+	templateGeneral, err := template.ParseFiles("templates/vector-agent.yaml")
+	if err != nil {
+		controllerLog.Error(err, "failed parse config template", "template", "vector.yaml")
+		return nil, err
+	}
+
+	if err := templateGeneral.Execute(&vectorTpl, pipeline); err != nil {
+		controllerLog.Error(err, "failed generate config file", "template", "vector.yaml")
+		return nil, err
+	}
+	data["vector.yaml"] = vectorTpl.String()
+
+	return data, nil
 }

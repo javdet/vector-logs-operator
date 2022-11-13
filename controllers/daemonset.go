@@ -125,7 +125,9 @@ func (r *AgentReconciler) daemonSetFromCR(instance *loggerv1beta.VectorAgent) *a
 						Name: "config",
 						VolumeSource: corev1.VolumeSource{
 							ConfigMap: &corev1.ConfigMapVolumeSource{
-								LocalObjectReference: corev1.LocalObjectReference{Name: instance.Name},
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: instance.Name,
+								},
 							},
 						},
 					}, {
@@ -165,6 +167,17 @@ func (r *AgentReconciler) daemonSetFromCR(instance *loggerv1beta.VectorAgent) *a
 						},
 					}},
 					ServiceAccountName: instance.Name,
+					Tolerations: []corev1.Toleration{{
+						Effect:   corev1.TaintEffectNoSchedule,
+						Key:      "node-role.kubernetes.io/master",
+						Operator: corev1.TolerationOpExists,
+					}, {
+						Effect:   corev1.TaintEffectNoExecute,
+						Operator: corev1.TolerationOpExists,
+					}, {
+						Effect:   corev1.TaintEffectNoSchedule,
+						Operator: corev1.TolerationOpExists,
+					}},
 				},
 			},
 		},
@@ -315,7 +328,9 @@ func (r *AgentPipelineReconciler) daemonSetFromCR(
 						Name: "config",
 						VolumeSource: corev1.VolumeSource{
 							ConfigMap: &corev1.ConfigMapVolumeSource{
-								LocalObjectReference: corev1.LocalObjectReference{Name: agent.Name},
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: agent.Name,
+								},
 							},
 						},
 					}, {
@@ -355,6 +370,17 @@ func (r *AgentPipelineReconciler) daemonSetFromCR(
 						},
 					}},
 					ServiceAccountName: agent.Name,
+					Tolerations: []corev1.Toleration{{
+						Effect:   corev1.TaintEffectNoSchedule,
+						Key:      "node-role.kubernetes.io/master",
+						Operator: corev1.TolerationOpExists,
+					}, {
+						Effect:   corev1.TaintEffectNoExecute,
+						Operator: corev1.TolerationOpExists,
+					}, {
+						Effect:   corev1.TaintEffectNoSchedule,
+						Operator: corev1.TolerationOpExists,
+					}},
 				},
 			},
 		},

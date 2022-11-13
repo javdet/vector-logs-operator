@@ -79,6 +79,7 @@ func (r *AgentPipelineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			return ctrl.Result{}, nil
 		}
 	} else {
+		controllerAgentPipelineLog.Info("Not Namespace event")
 		if err := r.GetClient().Get(ctx, req.NamespacedName, instance); err != nil {
 			if apierrors.IsNotFound(err) {
 				return ctrl.Result{}, nil
@@ -92,13 +93,16 @@ func (r *AgentPipelineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	opts := []client.ListOption{
 		client.MatchingLabels{nsLabel: "true"},
 	}
+	controllerAgentPipelineLog.Info("Get ns list")
 	if err := r.GetClient().List(ctx, nameSpaceList, opts...); err != nil {
+		controllerAgentPipelineLog.Error(err, "Failed getting namespace list")
 		return r.ManageError(ctx, instance, err)
 	}
 	var namespaces []string
 	for _, item := range nameSpaceList.Items {
 		namespaces = append(namespaces, item.Name)
 	}
+	controllerAgentPipelineLog.Info("start sync")
 	err, response := r.syncPipelineResources(ctx, *instance, namespaces)
 	if err != nil {
 		controllerAgentPipelineLog.Error(err, response)
@@ -135,7 +139,7 @@ func (r *AgentPipelineReconciler) syncPipelineResources(
 	}
 	if err := r.GetClient().List(ctx, agentList, opts...); err != nil {
 		controllerAgentPipelineLog.Error(err, "Failed to query vectoragent")
-		return err, ""
+		return err, "Failed to query vectoragent"
 	}
 
 	for _, agent := range agentList.Items {
@@ -143,7 +147,7 @@ func (r *AgentPipelineReconciler) syncPipelineResources(
 			ctx,
 			&instance,
 			agent.Namespace,
-			r.PipelineConfigMapFromCR(&instance, agent.Name, agent.Namespace, namespaces),
+			r.PipelineConfigMapFromCR(&agent, &instance, namespaces),
 		)
 		if err != nil {
 			return err, "Cannot update pipeline"

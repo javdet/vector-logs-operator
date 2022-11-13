@@ -41,18 +41,22 @@ type VectorPipelineSinks struct {
 }
 
 type VectorPipelineSinksS3 struct {
-	Name                 string   `json:"name"`
-	Inputs               []string `json:"inputs"`
-	Bucket               string   `json:"bucket"`
-	Region               string   `json:"region"`
-	ACL                  string   `json:"acl"`
-	Compression          string   `json:"compression,omitempty"`
-	ContentType          string   `json:"contentType,omitempty"`
-	Encoding             string   `json:"encoding,omitempty"`
-	Endpoint             string   `json:"endpoint,omitempty"`
-	KeyPrefix            string   `json:"keyPrefix,omitempty"`
-	ServerSideEncryption string   `json:"serverSideEncryption"`
-	Secret               string   `json:"secret"`
+	Name                 string                      `json:"name"`
+	Inputs               []string                    `json:"inputs"`
+	Bucket               string                      `json:"bucket"`
+	Region               string                      `json:"region"`
+	ACL                  string                      `json:"acl"`
+	Compression          string                      `json:"compression,omitempty"`
+	ContentType          string                      `json:"contentType,omitempty"`
+	Encoding             string                      `json:"encoding,omitempty"`
+	Endpoint             string                      `json:"endpoint,omitempty"`
+	KeyPrefix            string                      `json:"keyPrefix,omitempty"`
+	ServerSideEncryption string                      `json:"serverSideEncryption"`
+	Secret               VectorPipelineSinksS3Secret `json:"secret"`
+}
+
+type VectorPipelineSinksS3Secret struct {
+	Name string `json:"name"`
 }
 
 type VectorPipelineSinksConsole struct {
@@ -71,26 +75,38 @@ type VectorPipelineSinksFile struct {
 }
 
 type VectorPipelineSinksElasticsearch struct {
-	Name        string   `json:"name"`
-	Inputs      []string `json:"inputs"`
-	Compression string   `json:"compression,omitempty"`
-	Endpoint    string   `json:"endpoint"`
-	Pipeline    string   `json:"pipeline,omitempty"`
-	Mode        string   `json:"mode,omitempty"`
-	Secret      string   `json:"secret,omitempty"`
-	IDKey       string   `json:"idKey,omitempty"`
-	TLSCA       string   `json:"tlsCA,omitempty"`
+	Name        string                                 `json:"name"`
+	Inputs      []string                               `json:"inputs"`
+	Compression string                                 `json:"compression,omitempty"`
+	Endpoint    string                                 `json:"endpoint"`
+	Pipeline    string                                 `json:"pipeline,omitempty"`
+	Mode        string                                 `json:"mode,omitempty"`
+	Secret      VectorPipelineSinksElasticsearchSecret `json:"secret,omitempty"`
+	IDKey       string                                 `json:"idKey,omitempty"`
+	TLSCA       string                                 `json:"tlsCA,omitempty"`
+}
+
+type VectorPipelineSinksElasticsearchSecret struct {
+	Name        string `json:"name"`
+	UsernameKey string `json:"usernameKey"`
+	PasswordKey string `json:"passwordKey"`
 }
 
 type VectorPipelineSinksHTTP struct {
-	Name        string   `json:"name"`
-	Inputs      []string `json:"inputs"`
-	Compression string   `json:"compression,omitempty"`
-	URI         string   `json:"uri"`
-	Encoding    string   `json:"encoding,omitempty"`
-	Secret      string   `json:"secret,omitempty"`
-	Method      string   `json:"method,omitempty"`
-	TLSCA       string   `json:"tlsCA,omitempty"`
+	Name        string                        `json:"name"`
+	Inputs      []string                      `json:"inputs"`
+	Compression string                        `json:"compression,omitempty"`
+	URI         string                        `json:"uri"`
+	Encoding    string                        `json:"encoding,omitempty"`
+	Secret      VectorPipelineSinksHTTPSecret `json:"secret,omitempty"`
+	Method      string                        `json:"method,omitempty"`
+	TLSCA       string                        `json:"tlsCA,omitempty"`
+}
+
+type VectorPipelineSinksHTTPSecret struct {
+	Name        string `json:"name"`
+	UsernameKey string `json:"usernameKey"`
+	PasswordKey string `json:"passwordKey"`
 }
 
 type VectorPipelineSinksKafka struct {
@@ -105,8 +121,14 @@ type VectorPipelineSinksKafka struct {
 }
 
 type VectorPipelineSinksKafkaSasl struct {
-	Mechanism string `json:"mechanism"`
-	Secret    string `json:"secret"`
+	Mechanism string                             `json:"mechanism"`
+	Secret    VectorPipelineSinksKafkaSaslSecret `json:"secret"`
+}
+
+type VectorPipelineSinksKafkaSaslSecret struct {
+	Name        string `json:"name"`
+	UsernameKey string `json:"usernameKey"`
+	PasswordKey string `json:"passwordKey"`
 }
 
 type VectorPipelineSinksLoki struct {

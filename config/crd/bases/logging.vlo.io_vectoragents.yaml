@@ -43,6 +43,10 @@ spec:
                 type: string
               metricsScrapeInterval:
                 type: integer
+              podAnnotations:
+                additionalProperties:
+                  type: string
+                type: object
               resources:
                 properties:
                   limits:

@@ -11,6 +11,9 @@ spec:
   metricsScrapeInterval: 15
   internalLogs: true
   logLevel: info
+  podAnnotations:
+    pod_uid: "kubernetes.pod_id"
+    pod_namespace: "kubernetes.namespace_name"
   resources:
     limits:
       cpu: "1"

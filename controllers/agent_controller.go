@@ -21,8 +21,10 @@ import (
 	"github.com/go-logr/logr"
 	loggerv1beta "github.com/javdet/vector-logs-operator/api/v1beta"
 	"github.com/redhat-cop/operator-utils/pkg/util"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 )
 
@@ -73,41 +75,22 @@ func (r *AgentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		log.Error(err, "cannot get object VectorAgent")
 		return ctrl.Result{}, err
 	}
-	err := r.CreateOrUpdateResource(ctx, instance, instance.Namespace, r.PipelineConfigMapFromCR(instance))
-	if err != nil {
-		log.Error(err, "cannot create configmap")
+
+	nameSpaceList := &corev1.NamespaceList{}
+	opts := []client.ListOption{
+		client.MatchingLabels{nsLabel: "true"},
+	}
+	if err := r.GetClient().List(ctx, nameSpaceList, opts...); err != nil {
 		return r.ManageError(ctx, instance, err)
 	}
-
-	err = r.CreateResourceIfNotExists(ctx, instance, instance.Namespace, r.serviceAccountFromCR(instance))
-	if err != nil {
-		log.Error(err, "cannot create serviceaccount")
-		return r.ManageError(ctx, instance, err)
+	var namespaces []string
+	for _, item := range nameSpaceList.Items {
+		namespaces = append(namespaces, item.Name)
 	}
-
-	err = r.CreateOrUpdateResource(ctx, instance, instance.Namespace, r.clusterRoleFromCR(instance))
+	err, response := r.syncPipelineResources(ctx, *instance, namespaces)
 	if err != nil {
-		log.Error(err, "cannot create role")
+		controllerAgentPipelineLog.Error(err, response)
 		return r.ManageError(ctx, instance, err)
-	}
-
-	err = r.CreateOrUpdateResource(ctx, instance, instance.Namespace, r.clusterRoleBindingFromCR(instance))
-	if err != nil {
-		log.Error(err, "cannot create rolebinding")
-		return r.ManageError(ctx, instance, err)
-	}
-
-	err = r.CreateOrUpdateResource(ctx, instance, instance.Namespace, r.daemonSetFromCR(instance))
-	if err != nil {
-		log.Error(err, "cannot create daemonset")
-		return r.ManageError(ctx, instance, err)
-	}
-
-	err = r.CreateResourceIfNotExists(ctx, instance, instance.Namespace, r.daemonSetServiceFromCR(instance))
-	if err != nil {
-		log.Error(err, "cannot create configmap")
-		return r.ManageError(ctx, instance, err)
-
 	}
 
 	controllerLog.Info("finish reconcile", "request", req.NamespacedName)
@@ -120,4 +103,70 @@ func (r *AgentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&loggerv1beta.VectorAgent{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: 2}).
 		Complete(r)
+}
+
+func (r *AgentReconciler) syncPipelineResources(
+	ctx context.Context, instance loggerv1beta.VectorAgent, namespaces []string) (error, string) {
+	controllerAgentPipelineLog.Info("Sync pipeline resources", "instance", instance.GetName())
+	agentPipelineList := &loggerv1beta.VectorAgentPipelineList{}
+	var agentPipeline = &loggerv1beta.VectorAgentPipeline{}
+
+	if err := r.GetClient().List(ctx, agentPipelineList); err != nil {
+		controllerAgentPipelineLog.Error(err, "Failed to query vectoragentpipeline")
+		return err, ""
+	}
+
+	for _, pipeline := range agentPipelineList.Items {
+		for key, value := range pipeline.Spec.Selector {
+			if val, ok := instance.Labels[key]; ok {
+				if value == val {
+					agentPipeline = &pipeline
+					break
+				}
+			}
+		}
+	}
+	err := r.CreateOrUpdateResource(
+		ctx,
+		&instance,
+		instance.Namespace,
+		r.PipelineConfigMapFromCR(&instance, agentPipeline, namespaces),
+	)
+	if err != nil {
+		controllerLog.Error(err, "cannot create configmap")
+		return err, ""
+	}
+
+	err = r.CreateResourceIfNotExists(ctx, &instance, instance.Namespace, r.serviceAccountFromCR(&instance))
+	if err != nil {
+		controllerLog.Error(err, "cannot create serviceaccount")
+		return err, ""
+	}
+
+	err = r.CreateOrUpdateResource(ctx, &instance, instance.Namespace, r.clusterRoleFromCR(&instance))
+	if err != nil {
+		controllerLog.Error(err, "cannot create role")
+		return err, ""
+	}
+
+	err = r.CreateOrUpdateResource(ctx, &instance, instance.Namespace, r.clusterRoleBindingFromCR(&instance))
+	if err != nil {
+		controllerLog.Error(err, "cannot create rolebinding")
+		return err, ""
+	}
+
+	err = r.CreateOrUpdateResource(ctx, &instance, instance.Namespace, r.daemonSetFromCR(&instance))
+	if err != nil {
+		controllerLog.Error(err, "cannot create daemonset")
+		return err, ""
+	}
+
+	err = r.CreateResourceIfNotExists(ctx, &instance, instance.Namespace, r.daemonSetServiceFromCR(&instance))
+	if err != nil {
+		controllerLog.Error(err, "cannot create configmap")
+		return err, ""
+
+	}
+
+	return nil, "Success"
 }

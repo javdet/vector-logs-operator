@@ -7,10 +7,15 @@ api:
 sources:
   kubernetes:
     type: kubernetes_logs
-
+    {{- if .Sources.Kubernetes.PodAnnotations }}
+    pod_annotation_fields:
+      {{- range $key, $value := .Sources.Kubernetes.PodAnnotations }}
+      {{ $key }}: "{{ $value }}"
+      {{- end }}
+    {{- end }}
   metrics:
     type: internal_metrics
-    namespace: {{ .Sources.Metrics.Namespace }}
+    namespace: vector
     scrape_interval_secs: 15
 
   logs:
@@ -103,10 +108,12 @@ sinks:
       codec: {{ $sink.Elasticsearch.Encoding }}
     mode: {{ $sink.Elasticsearch.Mode }}
     id_key: {{ $sink.Elasticsearch.IdKey }}
-    {{- if ne $sink.Elasticsearch.Secret "" }}
+    {{- if ne $sink.Elasticsearch.Secret.Name "" }}
+    {{- $user := (printf "${%s}" $sink.Elasticsearch.Secret.UsernameKey) }}
+    {{- $password := (printf "${%s}" $sink.Elasticsearch.Secret.PasswordKey) }}
     auth:
-      user: ${ELASTIC_USERNAME}
-      password: ${ELASTIC_PASSWORD}
+      user: {{ $user }}
+      password: {{ $password }}
     {{- end }}
     {{- if ne $sink.Elasticsearch.TLSCA "" }}
     tls:
@@ -125,10 +132,12 @@ sinks:
     encoding:
       codec: {{ $sink.HTTP.encoding }}
     method: {{ $sink.HTTP.Method }}
-    {{ if ne $sink.HTTP.Secret "" }}
+    {{ if ne $sink.HTTP.Secret.Name "" }}
+    {{- $user := (printf "${%s}" $sink.HTTP.Secret.UsernameKey) }}
+    {{- $password := (printf "${%s}" $sink.HTTP.Secret.PasswordKey) }}
     auth:
-      user: ${HTTP_USERNAME}
-      password: ${HTTP_PASSWORD}
+      user: {{ $user }}
+      password: {{ $password }}
     {{- end }}
   {{- end }}
   {{ if ne $sink.Kafka.Topic "" }}
@@ -146,12 +155,14 @@ sinks:
     compression: {{ $sink.Kafka.Compression }}
     encoding:
       codec: {{ $sink.Kafka.Encoding }}
-    {{- if ne $sink.Kafka.Sasl.Secret "" }}
+    {{- if ne $sink.Kafka.Sasl.Secret.Name "" }}
+    {{- $username := (printf "${%s}" $sink.Kafka.Sasl.Secret.UsernameKey) }}
+    {{- $password := (printf "${%s}" $sink.Kafka.Sasl.Secret.PasswordKey) }}
     sasl:
       enabled: true
       mechanism: {{ $sink.Kafka.Sasl.Mechanism }}
-      username: ${KAFKA_USERNAME}
-      password: ${KAFKA_PASSWORD}
+      username: {{ $username }}
+      password: {{ $password }}
     {{- end }}
   {{- end }}
   {{ if ne $sink.Loki.Endpoint "" }}

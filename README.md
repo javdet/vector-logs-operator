@@ -24,3 +24,4 @@ The Logging operator automates the deployment and configuration of a Kubernetes 
 * Kubernetes >= 1.18
 * cert-manager >= 1.5
 * helm >= 3.0.0
+

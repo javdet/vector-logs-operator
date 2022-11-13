@@ -8,19 +8,40 @@ spec:
     - kafka:
         name: kafka
         inputs:
-          - kubernetes
+          - namespaces
         bootstrapServers: "rc1a-ks2s3o2ucn6n04hc.mdb.yandexcloud.net:9092,rc1b-u5h85la604c4siqs.mdb.yandexcloud.net:9092,rc1c-paiipeq5egsas1lv.mdb.yandexcloud.net:9092"
         topic: '{{kubernetes.namespace_name}}-dev'
         compression: snappy
         encoding: json
         sasl:
           mechanism: SCRAM-SHA-512
-          secret: log-kafka
-  transforms: |
+          secret:
+            name: log-kafka
+            usernameKey: KAFKA_USERNAME
+            passwordKey: KAFKA_PASSWORD
+  transforms: |-
     add:
         type: remap
         inputs:
+          - namespaces
+        source: |-
+          .log = .message
+          .topic = .kubernetes.namespace_name
+          .@timestamp = .timestamp
+          del(.timestamp)
+          del(.file)
+          del(.source_type)
+          del(.kubernetes.namespace_labels)
+          del(.message)
+      infra:
+        type: filter
+        inputs:
           - kubernetes
+        condition: .kubernetes.namespace_name == "operators" || .kubernetes.namespace_name == istio-system || .kubernetes.namespace_name == kube-system || .kubernetes.namespace_name == infrastructure || .kubernetes.namespace_name == observability || .kubernetes.namespace_name == monitoring
+      add_infra:
+        type: remap
+        inputs:
+          - infra
         source: |-
           .log = .message
           .topic = .kubernetes.namespace_name

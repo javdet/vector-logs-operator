@@ -45,12 +45,13 @@ type Resources struct {
 // Foo is an example field of VectorAgent. Edit agent_types.go to remove/update
 
 type VectorAgentSpec struct {
-	Image                 string    `json:"image,omitempty"`
-	Tag                   string    `json:"tag,omitempty"`
-	MetricsScrapeInterval int       `json:"metricsScrapeInterval,omitempty"`
-	InternalLogs          bool      `json:"internalLogs,omitempty"`
-	LogLevel              string    `json:"logLevel,omitempty"`
-	Resources             Resources `json:"resources,omitempty"`
+	Image                 string            `json:"image,omitempty"`
+	Tag                   string            `json:"tag,omitempty"`
+	MetricsScrapeInterval int               `json:"metricsScrapeInterval,omitempty"`
+	InternalLogs          bool              `json:"internalLogs,omitempty"`
+	LogLevel              string            `json:"logLevel,omitempty"`
+	Resources             Resources         `json:"resources,omitempty"`
+	PodAnnotations        map[string]string `json:"podAnnotations,omitempty"`
 }
 
 // +patchMergeKey=type
