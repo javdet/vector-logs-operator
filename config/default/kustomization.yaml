@@ -46,8 +46,7 @@ patchesStrategicMerge:
 #- webhookcainjection_patch.yaml
 
 # the following config is for teaching kustomize how to do var substitution
-vars:
-# [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER' prefix.
+#vars:
 #- name: CERTIFICATE_NAMESPACE # namespace of the certificate CR
 #  objref:
 #    kind: Certificate
@@ -74,3 +73,4 @@ vars:
 #    kind: Service
 #    version: v1
 #    name: webhook-service
+

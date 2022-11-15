@@ -145,7 +145,7 @@ func (r *AgentPipelineReconciler) syncPipelineResources(
 	for _, agent := range agentList.Items {
 		err := r.CreateOrUpdateResource(
 			ctx,
-			&instance,
+			&agent,
 			agent.Namespace,
 			r.PipelineConfigMapFromCR(&agent, &instance, namespaces),
 		)
@@ -155,7 +155,7 @@ func (r *AgentPipelineReconciler) syncPipelineResources(
 
 		err = r.CreateOrUpdateResource(
 			ctx,
-			&instance,
+			&agent,
 			agent.Namespace,
 			r.daemonSetFromCR(&instance, &agent),
 		)

@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	loggerv1beta "github.com/javdet/vector-logs-operator/api/v1beta"
-	"html/template"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"text/template"
 )
 
 const nsLabel = "vlo.io/logs"
@@ -47,7 +47,7 @@ func getSecrets(pipeline []loggerv1beta.VectorPipelineSinks) []corev1.EnvFromSou
 			secrets = append(secrets, getSecretRef(item.S3.Secret.Name))
 		}
 	}
-
+	controllerAgentPipelineLog.Info("Get secrets", "secrets", secrets)
 	return secrets
 }
 

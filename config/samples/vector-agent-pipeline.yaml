@@ -37,7 +37,7 @@ spec:
         type: filter
         inputs:
           - kubernetes
-        condition: .kubernetes.namespace_name == "operators" || .kubernetes.namespace_name == istio-system || .kubernetes.namespace_name == kube-system || .kubernetes.namespace_name == infrastructure || .kubernetes.namespace_name == observability || .kubernetes.namespace_name == monitoring
+        condition: .kubernetes.namespace_name == "operators" || .kubernetes.namespace_name == "istio-system" || .kubernetes.namespace_name == "kube-system" || .kubernetes.namespace_name == "infrastructure" || .kubernetes.namespace_name == "observability" || .kubernetes.namespace_name == "monitoring"
       add_infra:
         type: remap
         inputs:
