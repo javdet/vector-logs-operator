@@ -13,7 +13,29 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-logging-vlo-io-v1-vectoragent
+      path: /mutate-logging-vlo-io-v1beta-vectoragentpipeline
+  failurePolicy: Fail
+  name: mvectoragentpipeline.kb.io
+  rules:
+  - apiGroups:
+    - logging.vlo.io
+    apiVersions:
+    - v1
+    - v1beta
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - vectoragentpipelines
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-logging-vlo-io-v1beta-vectoragent
   failurePolicy: Fail
   name: mvectoragent.kb.io
   rules:
@@ -43,7 +65,29 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-logging-vlo-io-v1-vectoragent
+      path: /validate-logging-vlo-io-v1beta-vectoragentpipeline
+  failurePolicy: Fail
+  name: vvectoragentpipeline.kb.io
+  rules:
+  - apiGroups:
+    - logging.vlo.io
+    apiVersions:
+    - v1
+    - v1beta
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - vectoragentpipelines
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-logging-vlo-io-v1beta-vectoragent
   failurePolicy: Fail
   name: vvectoragents.kb.io
   rules:

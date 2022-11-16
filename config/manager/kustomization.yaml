@@ -13,4 +13,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: cr.yandex/crp29rd1alarj2e8jmp5/vtblife/cloudinfra/kubernetes/operators/vector-operator
-  newTag: v0.2.35
+  newTag: v0.3.0

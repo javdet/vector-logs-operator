@@ -21,7 +21,7 @@ func (r *VectorAgent) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-//+kubebuilder:webhook:path=/mutate-logging-vlo-io-v1-vectoragent,mutating=true,failurePolicy=fail,sideEffects=None,groups=logging.vlo.io,resources=vectoragents,verbs=create;update,versions={v1,v1beta},name=mvectoragent.kb.io,admissionReviewVersions={v1,v1beta}
+//+kubebuilder:webhook:path=/mutate-logging-vlo-io-v1beta-vectoragent,mutating=true,failurePolicy=fail,sideEffects=None,groups=logging.vlo.io,resources=vectoragents,verbs=create;update,versions={v1,v1beta},name=mvectoragent.kb.io,admissionReviewVersions={v1,v1beta}
 
 var _ webhook.Defaulter = &VectorAgent{}
 
@@ -54,7 +54,7 @@ func (r *VectorAgent) Default() {
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-logging-vlo-io-v1-vectoragent,mutating=false,failurePolicy=fail,sideEffects=None,groups=logging.vlo.io,resources=vectoragents,verbs=create;update,versions={v1,v1beta},name=vvectoragents.kb.io,admissionReviewVersions={v1,v1beta}
+//+kubebuilder:webhook:path=/validate-logging-vlo-io-v1beta-vectoragent,mutating=false,failurePolicy=fail,sideEffects=None,groups=logging.vlo.io,resources=vectoragents,verbs=create;update,versions={v1,v1beta},name=vvectoragents.kb.io,admissionReviewVersions={v1,v1beta}
 
 var _ webhook.Validator = &VectorAgent{}
 

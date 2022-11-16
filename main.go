@@ -106,6 +106,12 @@ func main() {
 		os.Exit(1)
 
 	}
+
+	if err = (&loggerv1beta.VectorAgentPipeline{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "VectorAgentPipeline")
+		os.Exit(1)
+
+	}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("health", healthz.Ping); err != nil {

@@ -19,6 +19,9 @@ The Logging operator automates the deployment and configuration of a Kubernetes 
 * VectorAgregatorPipeline - define sources, transforms and sinks sections for vector-agregator
 ![](docs/img/vector-operator3.png)
 
+Labels
+Для сбора логов только с определенных неймспейсов не обходимо задать label `vlo.io/logs: "true"`. В таком случае будет
+создан transform с названием namespaces, который может дальше использоваться, как input.
 
 ## Requirements
 * Kubernetes >= 1.18

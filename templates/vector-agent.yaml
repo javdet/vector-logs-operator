@@ -104,8 +104,6 @@ sinks:
     endpoint: {{ $sink.Elasticsearch.Endpoint }}
     pipeline: {{ $sink.Elasticsearch.Pipeline }}
     compression: {{ $sink.Elasticsearch.Compression }}
-    encoding:
-      codec: {{ $sink.Elasticsearch.Encoding }}
     mode: {{ $sink.Elasticsearch.Mode }}
     id_key: {{ $sink.Elasticsearch.IdKey }}
     {{- if ne $sink.Elasticsearch.Secret.Name "" }}
@@ -191,6 +189,5 @@ sinks:
       {{- end }}
     address: {{ $sink.Vector.Address }}
     compression: {{ $sink.Vector.Compression }}
-    version: {{ $sink.Vector.Version }}
   {{- end }}
 {{- end }}

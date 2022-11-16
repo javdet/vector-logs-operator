@@ -30,6 +30,7 @@ func getAnnotations() map[string]string {
 	}
 }
 
+// getSecrets get Secrets by CRD spec
 func getSecrets(pipeline []loggerv1beta.VectorPipelineSinks) []corev1.EnvFromSource {
 	var secrets = []corev1.EnvFromSource{}
 
@@ -129,6 +130,7 @@ func namespaceFilter() predicate.Predicate {
 	}
 }
 
+// getPipelineConfigData rendering te
 func getPipelineConfigData(
 	agent *loggerv1beta.VectorAgent, agentPipeline *loggerv1beta.VectorAgentPipeline, namespaces []string) (map[string]string, error) {
 	var data = make(map[string]string)

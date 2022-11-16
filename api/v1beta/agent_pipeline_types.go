@@ -147,7 +147,6 @@ type VectorPipelineSinksVector struct {
 	Inputs      []string `json:"inputs"`
 	Address     string   `json:"address"`
 	Compression string   `json:"compression,omitempty"`
-	Version     string   `json:"version"`
 }
 
 // +patchMergeKey=type

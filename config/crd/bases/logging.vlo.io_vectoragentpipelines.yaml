@@ -281,13 +281,10 @@ spec:
                           type: array
                         name:
                           type: string
-                        version:
-                          type: string
                       required:
                       - address
                       - inputs
                       - name
-                      - version
                       type: object
                   type: object
                 type: array
