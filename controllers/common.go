@@ -10,7 +10,10 @@ import (
 	"text/template"
 )
 
-const nsLabel = "vlo.io/logs"
+const (
+	nsLabel      = "vlo.io/logs"
+	replicaLabel = "vlo.io/aggregator-replicas"
+)
 
 // getLabels get common labels
 func getLabels(namespace string) map[string]string {
@@ -32,7 +35,7 @@ func getAnnotations() map[string]string {
 
 // getSecrets get Secrets by CRD spec
 func getSecrets(pipeline []loggerv1beta.VectorPipelineSinks) []corev1.EnvFromSource {
-	var secrets = []corev1.EnvFromSource{}
+	var secrets []corev1.EnvFromSource
 
 	for _, item := range pipeline {
 		if item.Elasticsearch.Secret.Name != "" {
@@ -52,8 +55,36 @@ func getSecrets(pipeline []loggerv1beta.VectorPipelineSinks) []corev1.EnvFromSou
 	return secrets
 }
 
+// getSecrets get Secrets by CRD spec
+func getAggregatorSecrets(pipeline loggerv1beta.VectorAggregatorSpec) []corev1.EnvFromSource {
+	var secrets []corev1.EnvFromSource
+
+	for _, item := range pipeline.Sources {
+		if item.Kafka.Sasl.Secret.Name != "" {
+			secrets = append(secrets, getSecretRef(item.Kafka.Sasl.Secret.Name))
+		}
+	}
+
+	for _, item := range pipeline.Sinks {
+		if item.Elasticsearch.Secret.Name != "" {
+			secrets = append(secrets, getSecretRef(item.Elasticsearch.Secret.Name))
+		}
+		if item.HTTP.Secret.Name != "" {
+			secrets = append(secrets, getSecretRef(item.HTTP.Secret.Name))
+		}
+		if item.Kafka.Sasl.Secret.Name != "" {
+			secrets = append(secrets, getSecretRef(item.Kafka.Sasl.Secret.Name))
+		}
+		if item.S3.Secret.Name != "" {
+			secrets = append(secrets, getSecretRef(item.S3.Secret.Name))
+		}
+	}
+	controllerAgentPipelineLog.Info("Get secrets", "secrets", secrets)
+	return secrets
+}
+
 func getSecretRef(secretName string) corev1.EnvFromSource {
-	var secret = corev1.EnvFromSource{}
+	var secret corev1.EnvFromSource
 	var optionalSecret = true
 
 	secret = corev1.EnvFromSource{
@@ -85,6 +116,9 @@ func namespaceFilter() predicate.Predicate {
 			if _, ok := event.Object.(*loggerv1beta.VectorAgentPipeline); ok {
 				response = true
 			}
+			if _, ok := event.Object.(*loggerv1beta.VectorAggregator); ok {
+				response = true
+			}
 			return response
 		},
 		UpdateFunc: func(updateEvent event.UpdateEvent) bool {
@@ -112,6 +146,12 @@ func namespaceFilter() predicate.Predicate {
 				response = true
 			}
 
+			_, oldObject = updateEvent.ObjectOld.(*loggerv1beta.VectorAggregator)
+			_, newObject = updateEvent.ObjectNew.(*loggerv1beta.VectorAggregator)
+			if oldObject && newObject {
+				response = true
+			}
+
 			return response
 		},
 
@@ -122,6 +162,11 @@ func namespaceFilter() predicate.Predicate {
 				response = true
 			}
 			_, ok = deleteEvent.Object.(*loggerv1beta.VectorAgentPipeline)
+			if ok {
+				response = true
+			}
+
+			_, ok = deleteEvent.Object.(*loggerv1beta.VectorAggregator)
 			if ok {
 				response = true
 			}
@@ -163,6 +208,61 @@ func getPipelineConfigData(
 
 	if err := templateGeneral.Execute(&vectorTpl, pipeline); err != nil {
 		controllerLog.Error(err, "failed generate config file", "template", "vector.yaml")
+		return nil, err
+	}
+	data["vector.yaml"] = vectorTpl.String()
+
+	return data, nil
+}
+
+func getContainerPorts(sources *loggerv1beta.VectorAggregator) []corev1.ContainerPort {
+	var ports = []corev1.ContainerPort{{
+		ContainerPort: 8686,
+		Name:          "api",
+		Protocol:      corev1.ProtocolTCP,
+	}, {
+		ContainerPort: 9100,
+		Name:          "metrics",
+		Protocol:      corev1.ProtocolTCP,
+	}}
+
+	for _, item := range sources.Spec.Sources {
+		if item.Vector.Port != 0 {
+			ports = append(ports, corev1.ContainerPort{
+				ContainerPort: item.Vector.Port,
+				Protocol:      corev1.ProtocolTCP,
+				Name:          item.Vector.Name,
+			})
+		}
+	}
+	return ports
+}
+
+func getAggregatorPipelineConfigData(aggregator *loggerv1beta.VectorAggregator, namespace string) (map[string]string, error) {
+	var data = make(map[string]string)
+	var vectorTpl bytes.Buffer
+
+	pipeline := VectorAggregatorPipeline{
+		Sources: PipelineSources{
+			Kafka: PipelineSourcesKafka{
+				Topics: namespace,
+			},
+		},
+		Sinks: PipelineSinks{
+			Prometheus: PipelineSinksPrometheus{
+				Namespace: aggregator.Name,
+			},
+		},
+		CRD: aggregator.Spec,
+	}
+	templateGeneral, err := template.ParseFiles("templates/vector-aggregator.yaml")
+	if err != nil {
+		controllerAggregatorLog.Error(err, "failed parse config template", "template", "vector.yaml")
+		return nil, err
+	}
+
+	if err := templateGeneral.Execute(&vectorTpl, pipeline); err != nil {
+		controllerAggregatorLog.Error(err, "failed generate config file", "template", "vector.yaml")
 		return nil, err
 	}
 	data["vector.yaml"] = vectorTpl.String()

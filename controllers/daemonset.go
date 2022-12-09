@@ -10,9 +10,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func (r *AgentReconciler) daemonSetFromCR(instance *loggerv1beta.VectorAgent) *appsv1.DaemonSet {
+func (r *AgentReconciler) daemonSetFromCR(
+	instance *loggerv1beta.VectorAgent, agentPipeline *loggerv1beta.VectorAgentPipeline) *appsv1.DaemonSet {
 	controllerLog.Info("Create daemonset", "instance", instance)
-	var secrets = []loggerv1beta.VectorPipelineSinks{}
 
 	return &appsv1.DaemonSet{
 		TypeMeta: metav1.TypeMeta{
@@ -95,7 +95,7 @@ func (r *AgentReconciler) daemonSetFromCR(instance *loggerv1beta.VectorAgent) *a
 								},
 							},
 						}},
-						EnvFrom: getSecrets(secrets),
+						EnvFrom: getSecrets(agentPipeline.Spec.Sinks),
 						VolumeMounts: []corev1.VolumeMount{{
 							Name:      "data",
 							MountPath: "/vector/data",

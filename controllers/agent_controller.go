@@ -155,7 +155,7 @@ func (r *AgentReconciler) syncPipelineResources(
 		return err, ""
 	}
 
-	err = r.CreateOrUpdateResource(ctx, &instance, instance.Namespace, r.daemonSetFromCR(&instance))
+	err = r.CreateOrUpdateResource(ctx, &instance, instance.Namespace, r.daemonSetFromCR(&instance, agentPipeline))
 	if err != nil {
 		controllerLog.Error(err, "cannot create daemonset")
 		return err, ""

@@ -90,4 +90,5 @@ type VectorAgentList struct {
 func init() {
 	SchemeBuilder.Register(&VectorAgent{}, &VectorAgentList{})
 	SchemeBuilder.Register(&VectorAgentPipeline{}, &VectorAgentPipelineList{})
+	SchemeBuilder.Register(&VectorAggregator{}, &VectorAggregatorList{})
 }

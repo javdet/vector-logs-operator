@@ -23,7 +23,3 @@ resources:
     controller: true
     kind: VectorAgentPipeline
     version: v1beta
-  - group: logging
-    controller: true
-    kind: VectorAgregatorPipeline
-    version: v1beta

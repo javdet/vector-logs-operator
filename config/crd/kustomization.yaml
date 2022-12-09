@@ -4,6 +4,7 @@
 resources:
   - bases/logging.vlo.io_vectoragents.yaml
   - bases/logging.vlo.io_vectoragentpipelines.yaml
+  - bases/logging.vlo.io_vectoraggregators.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

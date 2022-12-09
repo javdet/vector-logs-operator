@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
-  name: vectoragentpipelines.logging.vlo.io
+  name: vectoraggregators.logging.vlo.io
 spec:
   group: logging.vlo.io
   names:
-    kind: VectorAgentPipeline
-    listKind: VectorAgentPipelineList
-    plural: vectoragentpipelines
-    singular: vectoragentpipeline
+    kind: VectorAggregator
+    listKind: VectorAggregatorList
+    plural: vectoraggregators
+    singular: vectoraggregator
   scope: Namespaced
   versions:
   - name: v1beta
     schema:
       openAPIV3Schema:
-        description: VectorAgentPipeline is the Schema for the agents API
+        description: VectorAggregator is the Schema for the agents API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,11 +34,31 @@ spec:
           metadata:
             type: object
           spec:
-            description: VectorAgentPipelineSpec defines the desired state of VectorAgentPipeline
             properties:
-              selector:
-                additionalProperties:
-                  type: string
+              image:
+                type: string
+              internalLogs:
+                type: boolean
+              logLevel:
+                type: string
+              metricsScrapeInterval:
+                type: integer
+              resources:
+                properties:
+                  limits:
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    type: object
+                  requests:
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    type: object
                 type: object
               sinks:
                 items:
@@ -262,32 +282,84 @@ spec:
                       - secret
                       - serverSideEncryption
                       type: object
-                    vector:
+                  type: object
+                type: array
+              sources:
+                items:
+                  properties:
+                    kafka:
                       properties:
-                        address:
+                        autoOffsetReset:
                           type: string
-                        compression:
+                        bootstrapServers:
                           type: string
-                        inputs:
+                        decoding:
+                          type: string
+                        groupID:
+                          type: string
+                        keyField:
+                          type: string
+                        name:
+                          type: string
+                        sasl:
+                          properties:
+                            mechanism:
+                              type: string
+                            secret:
+                              properties:
+                                name:
+                                  type: string
+                                passwordKey:
+                                  type: string
+                                usernameKey:
+                                  type: string
+                              required:
+                              - name
+                              - passwordKey
+                              - usernameKey
+                              type: object
+                          required:
+                          - mechanism
+                          - secret
+                          type: object
+                        topics:
                           items:
                             type: string
                           type: array
+                      required:
+                      - autoOffsetReset
+                      - bootstrapServers
+                      - groupID
+                      - name
+                      type: object
+                    vector:
+                      properties:
+                        host:
+                          type: string
                         name:
                           type: string
+                        port:
+                          format: int32
+                          type: integer
+                        version:
+                          type: string
                       required:
-                      - address
+                      - host
                       - name
+                      - port
                       type: object
                   type: object
                 type: array
+              tag:
+                type: string
               transforms:
-                description: Foo is an example field of VectorAgentPipeline. Edit
-                  agent_pipeline_types.go to remove/update
                 type: string
             required:
-            - selector
+            - sinks
+            - sources
             type: object
           status:
+            description: VectorAggregatorStatus defines the observed state of Agent
             properties:
               conditions:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state

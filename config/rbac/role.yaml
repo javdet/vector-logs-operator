@@ -19,6 +19,18 @@ rules:
   - update
   - watch
 - apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - ""
   resources:
   - configmaps
@@ -143,6 +155,32 @@ rules:
   - logging.vlo.io
   resources:
   - vectoragents/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - logging.vlo.io
+  resources:
+  - vectoraggregators
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - logging.vlo.io
+  resources:
+  - vectoraggregators/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - logging.vlo.io
+  resources:
+  - vectoraggregators/status
   verbs:
   - get
   - patch

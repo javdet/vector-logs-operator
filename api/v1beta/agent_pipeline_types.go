@@ -42,7 +42,7 @@ type VectorPipelineSinks struct {
 
 type VectorPipelineSinksS3 struct {
 	Name                 string                      `json:"name"`
-	Inputs               []string                    `json:"inputs"`
+	Inputs               []string                    `json:"inputs,omitempty"`
 	Bucket               string                      `json:"bucket"`
 	Region               string                      `json:"region"`
 	ACL                  string                      `json:"acl"`
@@ -61,14 +61,14 @@ type VectorPipelineSinksS3Secret struct {
 
 type VectorPipelineSinksConsole struct {
 	Name     string   `json:"name"`
-	Inputs   []string `json:"inputs"`
+	Inputs   []string `json:"inputs,omitempty"`
 	Target   string   `json:"target"`
 	Encoding string   `json:"encoding,omitempty"`
 }
 
 type VectorPipelineSinksFile struct {
 	Name        string   `json:"name"`
-	Inputs      []string `json:"inputs"`
+	Inputs      []string `json:"inputs,omitempty"`
 	Compression string   `json:"compression,omitempty"`
 	Path        string   `json:"path"`
 	Encoding    string   `json:"encoding,omitempty"`
@@ -76,7 +76,7 @@ type VectorPipelineSinksFile struct {
 
 type VectorPipelineSinksElasticsearch struct {
 	Name        string                                 `json:"name"`
-	Inputs      []string                               `json:"inputs"`
+	Inputs      []string                               `json:"inputs,omitempty"`
 	Compression string                                 `json:"compression,omitempty"`
 	Endpoint    string                                 `json:"endpoint"`
 	Pipeline    string                                 `json:"pipeline,omitempty"`
@@ -94,7 +94,7 @@ type VectorPipelineSinksElasticsearchSecret struct {
 
 type VectorPipelineSinksHTTP struct {
 	Name        string                        `json:"name"`
-	Inputs      []string                      `json:"inputs"`
+	Inputs      []string                      `json:"inputs,omitempty"`
 	Compression string                        `json:"compression,omitempty"`
 	URI         string                        `json:"uri"`
 	Encoding    string                        `json:"encoding,omitempty"`
@@ -111,7 +111,7 @@ type VectorPipelineSinksHTTPSecret struct {
 
 type VectorPipelineSinksKafka struct {
 	Name             string                       `json:"name"`
-	Inputs           []string                     `json:"inputs"`
+	Inputs           []string                     `json:"inputs,omitempty"`
 	BootstrapServers string                       `json:"bootstrapServers"`
 	KeyField         string                       `json:"keyField,omitempty"`
 	Topic            string                       `json:"topic"`
@@ -133,18 +133,18 @@ type VectorPipelineSinksKafkaSaslSecret struct {
 
 type VectorPipelineSinksLoki struct {
 	Name         string            `json:"name"`
-	Inputs       []string          `json:"inputs"`
+	Inputs       []string          `json:"inputs,omitempty"`
 	Endpoint     string            `json:"endpoint"`
-	Labels       map[string]string `json:"labels"`
+	Labels       map[string]string `json:"labels,omitempty"`
 	Compression  string            `json:"compression,omitempty"`
 	Encoding     string            `json:"encoding,omitempty"`
-	ExceptFields string            `json:"exceptFields"`
+	ExceptFields []string          `json:"exceptFields,omitempty"`
 	TenantId     string            `json:"tenantId,omitempty"`
 }
 
 type VectorPipelineSinksVector struct {
 	Name        string   `json:"name"`
-	Inputs      []string `json:"inputs"`
+	Inputs      []string `json:"inputs,omitempty"`
 	Address     string   `json:"address"`
 	Compression string   `json:"compression,omitempty"`
 }

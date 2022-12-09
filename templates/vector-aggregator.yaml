@@ -1,0 +1,206 @@
+---
+data_dir: /vector/data
+api:
+  enabled: true
+  address: "0.0.0.0:8686"
+
+sources:
+  metrics:
+    type: internal_metrics
+    namespace: vector
+    scrape_interval_secs: 15
+
+  logs:
+    type: internal_logs
+
+{{- range $idx, $source := .CRD.Sources }}
+  {{- if ne $source.Kafka.BootstrapServers "" }}
+  {{ $source.Kafka.Name }}:
+    type: kafka
+    bootstrap_servers: {{ $source.Kafka.BootstrapServers }}
+    {{- if ne $source.Kafka.KeyField "" }}
+    key_field: {{ $source.Kafka.KeyField }}
+    {{- end }}
+    auto_offset_reset: {{ $source.Kafka.AutoOffsetReset }}
+    topics:
+      {{- if ne $.Sources.Kafka.Topics "" }}
+      - {{ $.Sources.Kafka.Topics }}
+      {{- end }}
+      {{- range $index, $topic := $source.Kafka.Topics }}
+      - {{ $topic }}
+      {{- end }}
+    group_id: {{ $source.Kafka.GroupID }}
+    decoding:
+      codec: {{ $source.Kafka.Decoding }}
+    {{- if ne $source.Kafka.Sasl.Secret.Name "" }}
+    {{- $username := (printf "${%s}" $source.Kafka.Sasl.Secret.UsernameKey) }}
+    {{- $password := (printf "${%s}" $source.Kafka.Sasl.Secret.PasswordKey) }}
+    sasl:
+      enabled: true
+      mechanism: {{ $source.Kafka.Sasl.Mechanism }}
+      username: {{ $username }}
+      password: {{ $password }}
+    {{- end }}
+  {{- end }}
+  {{ if ne $source.Vector.Host "" }}
+  {{ $source.Vector.Name }}:
+    type: vector
+    address: {{ $source.Vector.Host }}:{{ $source.Vector.Port }}
+    version: {{ $source.Vector.Version }}
+  {{- end }}
+{{- end }}
+
+{{- if ne .CRD.Transforms "" }}
+transforms:
+  {{ .CRD.Transforms }}
+{{- end }}
+
+sinks:
+  prometheus_exporter:
+    type: prometheus_exporter
+    inputs:
+      - metrics
+    address: 0.0.0.0:9100
+    default_namespace: {{ .Sinks.Prometheus.Namespace }}
+
+  console_logs:
+    type: "console"
+    inputs:
+      - logs
+    target: "stdout"
+    encoding: "json"
+
+{{- range $idx, $sink := .CRD.Sinks }}
+  {{ if ne $sink.S3.Bucket "" }}
+  {{ $sink.S3.Name }}:
+    type: aws_s3
+    inputs:
+      {{- range $index, $input := $sink.S3.Inputs }}
+      - {{ $input }}
+      {{- end }}
+    bucket: {{ $sink.S3.Bucket }}
+    key_prefix: {{ $sink.S3.KeyPrefix }}
+    compression: {{ $sink.S3.Compression }}
+    encoding:
+      codec: {{ $sink.S3.Encoding }}
+    region: {{ $sink.S3.Region }}
+    acl: {{ $sink.S3.ACL }}
+    content_type: {{ $sink.S3.ContentType }}
+    {{ if ne $sink.S3.Endpoint "" }}
+    endpoint: {{ $sink.S3.Endpoint }}
+    {{- end }}
+  {{- end }}
+  {{ if ne $sink.Console.Target "" }}
+  {{ $sink.Console.Name }}:
+    type: console
+    inputs:
+      {{- range $index, $input := $sink.Console.Inputs }}
+      - {{ $input }}
+      {{- end }}
+    target: {{ $sink.Console.Target }}
+    encoding:
+      codec: {{ $sink.Console.Encoding }}
+  {{- end }}
+  {{ if ne $sink.File.Path "" }}
+  {{ $sink.File.Name }}:
+    type: file
+    inputs:
+      {{- range $index, $input := $sink.File.Inputs }}
+      - {{ $input }}
+      {{- end }}
+    compression: {{ $sink.File.Compression }}
+    encoding:
+      codec: {{ $sink.File.Encoding }}
+    path: {{ $sink.File.Path }}
+  {{- end }}
+  {{ if ne $sink.Elasticsearch.Endpoint "" }}
+  {{ $sink.Elasticsearch.Name }}:
+    type: elasticsearch
+    inputs:
+      {{- range $index, $input := $sink.Elasticsearch.Inputs }}
+      - {{ $input }}
+      {{- end }}
+    endpoint: {{ $sink.Elasticsearch.Endpoint }}
+    pipeline: {{ $sink.Elasticsearch.Pipeline }}
+    compression: {{ $sink.Elasticsearch.Compression }}
+    mode: {{ $sink.Elasticsearch.Mode }}
+    id_key: {{ $sink.Elasticsearch.IdKey }}
+    {{- if ne $sink.Elasticsearch.Secret.Name "" }}
+    {{- $user := (printf "${%s}" $sink.Elasticsearch.Secret.UsernameKey) }}
+    {{- $password := (printf "${%s}" $sink.Elasticsearch.Secret.PasswordKey) }}
+    auth:
+      user: {{ $user }}
+      password: {{ $password }}
+    {{- end }}
+    {{- if ne $sink.Elasticsearch.TLSCA "" }}
+    tls:
+      ca_file: {{ $sink.Elasticsearch.TLSCA }}
+    {{- end }}
+  {{- end }}
+  {{ if ne $sink.HTTP.URI "" }}
+  {{ $sink.HTTP.Name }}:
+    type: http
+    inputs:
+      {{- range $index, $input := $sink.HTTP.Inputs }}
+      - {{ $input }}
+      {{- end }}
+    uri: {{ $sink.HTTP.URI }}
+    compression: {{ $sink.HTTP.Compression }}
+    encoding:
+      codec: {{ $sink.HTTP.encoding }}
+    method: {{ $sink.HTTP.Method }}
+    {{ if ne $sink.HTTP.Secret.Name "" }}
+    {{- $user := (printf "${%s}" $sink.HTTP.Secret.UsernameKey) }}
+    {{- $password := (printf "${%s}" $sink.HTTP.Secret.PasswordKey) }}
+    auth:
+      user: {{ $user }}
+      password: {{ $password }}
+    {{- end }}
+  {{- end }}
+  {{ if ne $sink.Kafka.Topic "" }}
+  {{ $sink.Kafka.Name }}:
+    type: kafka
+    inputs:
+      {{- range $index, $input := $sink.Kafka.Inputs }}
+      - {{ $input }}
+      {{- end }}
+    bootstrap_servers: {{ $sink.Kafka.BootstrapServers }}
+    {{- if ne $sink.Kafka.KeyField "" }}
+    key_field: {{ $sink.Kafka.KeyField }}
+    {{- end }}
+    topic: '{{ $sink.Kafka.Topic }}'
+    compression: {{ $sink.Kafka.Compression }}
+    encoding:
+      codec: {{ $sink.Kafka.Encoding }}
+    {{- if ne $sink.Kafka.Sasl.Secret.Name "" }}
+    {{- $username := (printf "${%s}" $sink.Kafka.Sasl.Secret.UsernameKey) }}
+    {{- $password := (printf "${%s}" $sink.Kafka.Sasl.Secret.PasswordKey) }}
+    sasl:
+      enabled: true
+      mechanism: {{ $sink.Kafka.Sasl.Mechanism }}
+      username: {{ $username }}
+      password: {{ $password }}
+    {{- end }}
+  {{- end }}
+  {{ if ne $sink.Loki.Endpoint "" }}
+  {{ $sink.Loki.Name }}:
+    type: loki
+    inputs:
+      {{- range $index, $input := $sink.Loki.Inputs }}
+      - {{ $input }}
+      {{- end }}
+    endpoint: {{ $sink.Loki.Endpoint }}
+    compression: {{ $sink.Loki.Compression }}
+    encoding:
+      codec: {{ $sink.Loki.Encoding }}
+      except_fields:
+        {{- range $key, $value := $sink.Loki.ExceptFields }}
+        - "{{ $value }}"
+        {{- end }}
+    labels:
+      {{- range $key, $value := $sink.Loki.Labels }}
+      {{ $key }}: '{{ $value }}'
+      {{- end }}
+    tenant_id: "{{ $sink.Loki.TenantId }}"
+  {{- end }}
+{{- end }}

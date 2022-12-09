@@ -101,6 +101,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.AggregatorReconciler{
+		ReconcilerBase: util.NewReconcilerBase(
+			mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(),
+			mgr.GetEventRecorderFor("VectorAggregator"), mgr.GetAPIReader(),
+		),
+		Log: ctrl.Log.WithName("controllers").WithName("reconciler"),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "VectorAggregator")
+		os.Exit(1)
+	}
+
 	if err = (&loggerv1beta.VectorAgent{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "VectorAgent")
 		os.Exit(1)

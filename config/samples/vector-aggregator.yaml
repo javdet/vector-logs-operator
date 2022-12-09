@@ -1,0 +1,79 @@
+apiVersion: logging.vlo.io/v1beta
+kind: VectorAggregator
+metadata:
+  name: vector
+  namespace: logging
+  labels:
+    logging: vector-aggregator
+spec:
+  image: timberio/vector
+  tag: 0.21.2-distroless-libc
+  metricsScrapeInterval: 15
+  internalLogs: true
+  logLevel: info
+  resources:
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+  sources:
+    - kafka:
+        name: kafka
+        bootstrapServers: "rc1a-ks2s3o2ucn6n04hc.mdb.yandexcloud.net:9092,rc1b-u5h85la604c4siqs.mdb.yandexcloud.net:9092,rc1c-paiipeq5egsas1lv.mdb.yandexcloud.net:9092"
+        decoding: json
+        sasl:
+          mechanism: SCRAM-SHA-512
+          secret:
+            name: log-kafka
+            usernameKey: KAFKA_USERNAME
+            passwordKey: KAFKA_PASSWORD
+        groupID: common-vector
+        autoOffsetReset: earliest
+  transforms: |
+    clear:
+        inputs:
+        - kafka
+        source: |-
+          . = parse_json!(string!(.message))
+          .container = .kubernetes.container_name
+          .namespace = .kubernetes.namespace_name
+          .host = .kubernetes.host
+          .pod = .kubernetes.pod_name
+          .image = .kubernetes.container_image
+          .pod_labels = .kubernetes.labels
+          .pod_annotations = .kubernetes.annotations
+          del(.kubernetes)
+          del(.topic)
+          del(.@timestamp)
+          del(.time)
+          del(.@timestamp)
+          del(.time)
+          del(.partition)
+          del(.offset)
+        type: remap
+      parsing:
+        field: log
+        inputs:
+          - clear
+        type: json_parser
+  sinks:
+    - loki:
+        name: loki
+        encoding: json
+        endpoint: https://loki-gw.dev.m2.ru
+        inputs:
+          - parsing
+        tenantId: "1"
+        compression: none
+        exceptFields:
+          - container_name
+          - namespace
+          - host
+          - pod_name
+        labels:
+          container: '{{ container }}'
+          host: '{{ host }}'
+          namespace: '{{ namespace }}'
+          stream: '{{ stream }}'
