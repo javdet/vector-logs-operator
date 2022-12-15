@@ -1,0 +1,12 @@
+---
+apiVersion: v2
+name: vector-operator
+home: https://gitlab.m2.ru/
+version: 0.1.0
+description: vector-operator
+maintainers:
+  - name: Sergey Byvshev
+    email: byvshevsp@m2.ru
+engine: gotpl
+type: application
+appVersion: v0.51

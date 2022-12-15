@@ -23,11 +23,18 @@ sources:
 
 {{ if .Transforms.Filter.Namespaces }}
 transforms:
-  namespaces:
+  namespace_filter:
     type: filter
     inputs:
       - kubernetes
     condition: {{range $index, $namespace := .Transforms.Filter.Namespaces }}{{if $index}} || {{end}}.kubernetes.namespace_name == "{{ $namespace }}"{{ end }}
+
+  set_namespace:
+    type: remap
+    inputs:
+      - namespace_filter
+    source: .namespace = .kubernetes.namespace_name
+
   {{- if ne .CRD.Transforms "" }}
   {{ .CRD.Transforms }}
   {{- end }}
@@ -52,14 +59,18 @@ sinks:
     encoding: "json"
 
 {{- range $idx, $sink := .CRD.Sinks }}
-  {{ if ne $sink.S3.Bucket "" }}
+  {{ if ne $sink.S3.Name "" }}
   {{ $sink.S3.Name }}:
     type: aws_s3
     inputs:
       {{- range $index, $input := $sink.S3.Inputs }}
       - {{ $input }}
       {{- end }}
+    {{- if ne $sink.S3.Bucket "" }}
     bucket: {{ $sink.S3.Bucket }}
+    {{ else }}
+    bucket: '{{ namespace }}'
+    {{- end }}
     key_prefix: {{ $sink.S3.KeyPrefix }}
     compression: {{ $sink.S3.Compression }}
     encoding:
@@ -101,7 +112,16 @@ sinks:
       {{- range $index, $input := $sink.Elasticsearch.Inputs }}
       - {{ $input }}
       {{- end }}
-    endpoint: {{ $sink.Elasticsearch.Endpoint }}
+    endpoints:
+      {{- range $index, $endpoint := $sink.Elasticsearch.Endpoints }}
+      - {{ $endpoint }}
+      {{- end }}
+    bulk:
+      {{- if ne $sink.Elasticsearch.Index "" }}
+      index: {{ $sink.Elasticsearch.Index }}
+      {{ else }}
+      index: '{{ namespace }}'
+      {{- end }}
     pipeline: {{ $sink.Elasticsearch.Pipeline }}
     compression: {{ $sink.Elasticsearch.Compression }}
     mode: {{ $sink.Elasticsearch.Mode }}
@@ -138,7 +158,7 @@ sinks:
       password: {{ $password }}
     {{- end }}
   {{- end }}
-  {{ if ne $sink.Kafka.Topic "" }}
+  {{ if ne $sink.Kafka.BootstrapServers "" }}
   {{ $sink.Kafka.Name }}:
     type: kafka
     inputs:
@@ -149,7 +169,10 @@ sinks:
     {{- if ne $sink.Kafka.KeyField "" }}
     key_field: {{ $sink.Kafka.KeyField }}
     {{- end }}
+    {{- if ne $sink.Kafka.Topic "" }}
     topic: '{{ $sink.Kafka.Topic }}'
+    {{ else }}
+    topic: '{{ namespace }}'
     compression: {{ $sink.Kafka.Compression }}
     encoding:
       codec: {{ $sink.Kafka.Encoding }}

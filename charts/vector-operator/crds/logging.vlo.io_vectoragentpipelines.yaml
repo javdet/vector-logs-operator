@@ -75,6 +75,7 @@ spec:
                         uri:
                           type: string
                       required:
+                      - name
                       - uri
                       type: object
                     console:
@@ -89,6 +90,8 @@ spec:
                           type: string
                         target:
                           type: string
+                      required:
+                      - name
                       type: object
                     elasticsearch:
                       properties:
@@ -127,6 +130,8 @@ spec:
                           type: object
                         tlsCA:
                           type: string
+                      required:
+                      - name
                       type: object
                     file:
                       properties:
@@ -143,6 +148,7 @@ spec:
                         path:
                           type: string
                       required:
+                      - name
                       - path
                       type: object
                     kafka:
@@ -186,6 +192,7 @@ spec:
                           type: string
                       required:
                       - bootstrapServers
+                      - name
                       - topic
                       type: object
                     loki:
@@ -214,6 +221,7 @@ spec:
                           type: string
                       required:
                       - endpoint
+                      - name
                       type: object
                     s3:
                       properties:
@@ -251,6 +259,7 @@ spec:
                       required:
                       - acl
                       - bucket
+                      - name
                       - region
                       - secret
                       - serverSideEncryption
@@ -269,6 +278,7 @@ spec:
                           type: string
                       required:
                       - address
+                      - name
                       type: object
                   type: object
                 type: array

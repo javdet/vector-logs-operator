@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
-  name: vectoragentpipelines.logging.vlo.io
+  name: vectoraggregators.logging.vlo.io
 spec:
   group: logging.vlo.io
   names:
-    kind: VectorAgentPipeline
-    listKind: VectorAgentPipelineList
-    plural: vectoragentpipelines
-    singular: vectoragentpipeline
+    kind: VectorAggregator
+    listKind: VectorAggregatorList
+    plural: vectoraggregators
+    singular: vectoraggregator
   scope: Namespaced
   versions:
   - name: v1beta
     schema:
       openAPIV3Schema:
-        description: VectorAgentPipeline is the Schema for the agents API
+        description: VectorAggregator is the Schema for the agents API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,11 +34,31 @@ spec:
           metadata:
             type: object
           spec:
-            description: VectorAgentPipelineSpec defines the desired state of VectorAgentPipeline
             properties:
-              selector:
-                additionalProperties:
-                  type: string
+              image:
+                type: string
+              internalLogs:
+                type: boolean
+              logLevel:
+                type: string
+              metricsScrapeInterval:
+                type: integer
+              resources:
+                properties:
+                  limits:
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    type: object
+                  requests:
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    type: object
                 type: object
               sinks:
                 items:
@@ -75,6 +95,7 @@ spec:
                         uri:
                           type: string
                       required:
+                      - name
                       - uri
                       type: object
                     console:
@@ -89,6 +110,8 @@ spec:
                           type: string
                         target:
                           type: string
+                      required:
+                      - name
                       type: object
                     elasticsearch:
                       properties:
@@ -127,6 +150,8 @@ spec:
                           type: object
                         tlsCA:
                           type: string
+                      required:
+                      - name
                       type: object
                     file:
                       properties:
@@ -143,6 +168,7 @@ spec:
                         path:
                           type: string
                       required:
+                      - name
                       - path
                       type: object
                     kafka:
@@ -186,6 +212,7 @@ spec:
                           type: string
                       required:
                       - bootstrapServers
+                      - name
                       - topic
                       type: object
                     loki:
@@ -214,6 +241,7 @@ spec:
                           type: string
                       required:
                       - endpoint
+                      - name
                       type: object
                     s3:
                       properties:
@@ -251,35 +279,121 @@ spec:
                       required:
                       - acl
                       - bucket
+                      - name
                       - region
                       - secret
                       - serverSideEncryption
                       type: object
-                    vector:
+                  type: object
+                type: array
+              sources:
+                items:
+                  properties:
+                    AMQP:
                       properties:
-                        address:
+                        connection:
                           type: string
-                        compression:
+                        groupID:
                           type: string
-                        inputs:
+                        name:
+                          type: string
+                        offsetKey:
+                          type: string
+                      required:
+                      - connection
+                      - groupID
+                      - name
+                      type: object
+                    kafka:
+                      properties:
+                        autoOffsetReset:
+                          type: string
+                        bootstrapServers:
+                          type: string
+                        decoding:
+                          type: string
+                        groupID:
+                          type: string
+                        keyField:
+                          type: string
+                        name:
+                          type: string
+                        sasl:
+                          properties:
+                            mechanism:
+                              type: string
+                            secret:
+                              properties:
+                                name:
+                                  type: string
+                                passwordKey:
+                                  type: string
+                                usernameKey:
+                                  type: string
+                              required:
+                              - name
+                              - passwordKey
+                              - usernameKey
+                              type: object
+                          required:
+                          - mechanism
+                          - secret
+                          type: object
+                        topics:
                           items:
                             type: string
                           type: array
+                      required:
+                      - autoOffsetReset
+                      - bootstrapServers
+                      - groupID
+                      - name
+                      type: object
+                    s3:
+                      properties:
+                        SQS:
+                          type: string
+                        compression:
+                          type: string
+                        endpoint:
+                          type: string
                         name:
                           type: string
+                        region:
+                          type: string
                       required:
-                      - address
+                      - SQS
+                      - name
+                      - region
+                      type: object
+                    vector:
+                      properties:
+                        host:
+                          type: string
+                        name:
+                          type: string
+                        port:
+                          format: int32
+                          type: integer
+                        version:
+                          type: string
+                      required:
+                      - host
+                      - name
+                      - port
                       type: object
                   type: object
                 type: array
+              tag:
+                type: string
               transforms:
-                description: Foo is an example field of VectorAgentPipeline. Edit
-                  agent_pipeline_types.go to remove/update
                 type: string
             required:
-            - selector
+            - sinks
+            - sources
             type: object
           status:
+            description: VectorAggregatorStatus defines the observed state of Agent
             properties:
               conditions:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state

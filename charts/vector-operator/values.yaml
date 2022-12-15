@@ -1,0 +1,65 @@
+name: vector-operator-controller
+
+replicasCount: 1
+createCustomResource: true
+imagePullSecrets:
+operator:
+  proxy:
+    name: kube-rbac-proxy
+    image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
+    imagePullPolicy: IfNotPresent
+  manager:
+    name: manager
+    image: javdet/vector-logs-operator:latest
+    imagePullPolicy: IfNotPresent
+  service:
+    port: 8443
+    name: https
+    targetPort: 8443
+
+livenessProbe:
+  failureThreshold: 3
+  httpGet:
+    path: /healthz
+    port: 8081
+    scheme: HTTP
+  initialDelaySeconds: 15
+  periodSeconds: 20
+  successThreshold: 1
+  timeoutSeconds: 1
+
+readinessProbe:
+  failureThreshold: 3
+  httpGet:
+    path: /readyz
+    port: 8081
+    scheme: HTTP
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 30Mi
+  requests:
+    cpu: 100m
+    memory: 20Mi
+
+volumeMounts:
+  - mountPath: /tmp/k8s-webhook-server/serving-certs
+    name: cert
+    readOnly: true
+
+volumes:
+  - name: cert
+    secret:
+      defaultMode: 420
+      secretName: vector-operator-controller-webhook-service-cert
+
+webhook:
+  service:
+    port: 443
+    name: https
+    targetPort: 9443

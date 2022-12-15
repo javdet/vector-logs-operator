@@ -1,0 +1,107 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ .Values.name }}-serving-cert
+  labels:
+  {{- include "vector-operator.labels" . | nindent 4 }}
+  name: {{ .Values.name }}-mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+    - v1
+    - v1beta1
+  clientConfig:
+    service:
+      name: {{ .Values.name }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /mutate-logging-vlo-io-v1beta-vectoragent
+  failurePolicy: Fail
+  name: mvectoragent.kb.io
+  rules:
+    - apiGroups:
+        - logging.vlo.io
+      apiVersions:
+        - v1
+      operations:
+        - CREATE
+        - UPDATE
+      resources:
+        - vectoragents
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: {{ .Values.name }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /mutate-logging-vlo-io-v1beta-vectoragentpipeline
+      port: {{ .Values.webhook.service.port }}
+  name: mvectoragentpipeline.kb.io
+  rules:
+  - apiGroups:
+      - logging.vlo.io
+    apiVersions:
+      - v1
+    operations:
+      - CREATE
+      - UPDATE
+    resources:
+      - vectoragentpipelines
+    scope: '*'
+  sideEffects: None
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ .Values.name }}-serving-cert
+  labels:
+  {{- include "vector-operator.labels" . | nindent 4 }}
+  name: {{ .Values.name }}-validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+    - v1
+    - v1beta1
+  clientConfig:
+    service:
+      name: {{ .Values.name }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-logging-vlo-io-v1beta-vectoragent
+  failurePolicy: Fail
+  name: vvectoragent.kb.io
+  rules:
+    - apiGroups:
+        - logging.vlo.io
+      apiVersions:
+        - v1
+      operations:
+        - CREATE
+        - UPDATE
+      resources:
+        - vectoragents
+  sideEffects: None
+- admissionReviewVersions:
+    - v1
+    - v1beta1
+  clientConfig:
+    service:
+      name: {{ .Values.name }}-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-logging-vlo-io-v1beta-vectoragentpipeline
+      port: {{ .Values.webhook.service.port }}
+  name: vvectoragent.kb.io
+  rules:
+  - apiGroups:
+      - logger.m2.ru
+    apiVersions:
+      - v1
+    operations:
+      - CREATE
+      - UPDATE
+    resources:
+      - vectoragentpipelines
+    scope: '*'
+  sideEffects: None

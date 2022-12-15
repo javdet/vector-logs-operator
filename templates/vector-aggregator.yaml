@@ -14,6 +14,22 @@ sources:
     type: internal_logs
 
 {{- range $idx, $source := .CRD.Sources }}
+  {{- if ne $source.AMQP.Connection "" }}
+  {{ $source.AMQP.Name }}:
+    type: amqp
+    connection: {{ $source.AMQP.Connection }}
+    group_id: {{ $source.AMQP.GroupID }}
+    offset_key: {{ $source.AMQP.OffsetKey }}
+  {{- end }}
+  {{- if ne $source.S3.Region }}
+  {{ $source.S3.Name }}:
+    type: aws_s3
+    endpoint: {{ $source.S3.Endpoint }}
+    strategy: sqs
+    region: {{ $source.S3.Region }}
+    sqs: {{ $source.S3.SQS }}
+    compression: {{ $source.S3.Compression }}
+  {{- end }}
   {{- if ne $source.Kafka.BootstrapServers "" }}
   {{ $source.Kafka.Name }}:
     type: kafka
@@ -120,7 +136,12 @@ sinks:
       {{- range $index, $input := $sink.Elasticsearch.Inputs }}
       - {{ $input }}
       {{- end }}
-    endpoint: {{ $sink.Elasticsearch.Endpoint }}
+    endpoints:
+      {{- range $index, $endpoint := $sink.Elasticsearch.Endpoints }}
+      - {{ $endpoint }}
+      {{- end }}
+    bulk:
+      index: {{ $sink.Elasticsearch.Index }}
     pipeline: {{ $sink.Elasticsearch.Pipeline }}
     compression: {{ $sink.Elasticsearch.Compression }}
     mode: {{ $sink.Elasticsearch.Mode }}

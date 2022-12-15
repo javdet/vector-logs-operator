@@ -112,6 +112,9 @@ func namespaceFilter() predicate.Predicate {
 						response = true
 					}
 				}
+				if _, ok := event.Object.GetLabels()[replicaLabel]; ok {
+					response = true
+				}
 			}
 			if _, ok := event.Object.(*loggerv1beta.VectorAgentPipeline); ok {
 				response = true

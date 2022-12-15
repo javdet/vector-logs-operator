@@ -95,7 +95,6 @@ spec:
                         uri:
                           type: string
                       required:
-                      - name
                       - uri
                       type: object
                     console:
@@ -110,17 +109,18 @@ spec:
                           type: string
                         target:
                           type: string
-                      required:
-                      - name
-                      - target
                       type: object
                     elasticsearch:
                       properties:
                         compression:
                           type: string
-                        endpoint:
-                          type: string
+                        endpoints:
+                          items:
+                            type: string
+                          type: array
                         idKey:
+                          type: string
+                        index:
                           type: string
                         inputs:
                           items:
@@ -147,9 +147,6 @@ spec:
                           type: object
                         tlsCA:
                           type: string
-                      required:
-                      - endpoint
-                      - name
                       type: object
                     file:
                       properties:
@@ -166,7 +163,6 @@ spec:
                         path:
                           type: string
                       required:
-                      - name
                       - path
                       type: object
                     kafka:
@@ -210,7 +206,6 @@ spec:
                           type: string
                       required:
                       - bootstrapServers
-                      - name
                       - topic
                       type: object
                     loki:
@@ -239,7 +234,6 @@ spec:
                           type: string
                       required:
                       - endpoint
-                      - name
                       type: object
                     s3:
                       properties:
@@ -277,7 +271,6 @@ spec:
                       required:
                       - acl
                       - bucket
-                      - name
                       - region
                       - secret
                       - serverSideEncryption
@@ -287,6 +280,20 @@ spec:
               sources:
                 items:
                   properties:
+                    amqp:
+                      properties:
+                        connection:
+                          type: string
+                        groupID:
+                          type: string
+                        name:
+                          type: string
+                        offsetKey:
+                          type: string
+                      required:
+                      - connection
+                      - groupID
+                      type: object
                     kafka:
                       properties:
                         autoOffsetReset:
@@ -330,7 +337,22 @@ spec:
                       - autoOffsetReset
                       - bootstrapServers
                       - groupID
-                      - name
+                      type: object
+                    s3:
+                      properties:
+                        SQS:
+                          type: string
+                        compression:
+                          type: string
+                        endpoint:
+                          type: string
+                        name:
+                          type: string
+                        region:
+                          type: string
+                      required:
+                      - SQS
+                      - region
                       type: object
                     vector:
                       properties:
@@ -345,7 +367,6 @@ spec:
                           type: string
                       required:
                       - host
-                      - name
                       - port
                       type: object
                   type: object

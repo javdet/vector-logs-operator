@@ -50,6 +50,28 @@ webhooks:
     resources:
     - vectoragents
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-logging-vlo-io-v1beta-vectoraggregator
+  failurePolicy: Fail
+  name: mvectoraggregator.kb.io
+  rules:
+  - apiGroups:
+    - logging.vlo.io
+    apiVersions:
+    - v1
+    - v1beta
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - vectoraggregators
+  sideEffects: None
 
 ---
 apiVersion: admissionregistration.k8s.io/v1
@@ -101,4 +123,26 @@ webhooks:
     - UPDATE
     resources:
     - vectoragents
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-logging-vlo-io-v1beta-vectoraggregator
+  failurePolicy: Fail
+  name: vvectoraggregator.kb.io
+  rules:
+  - apiGroups:
+    - logging.vlo.io
+    apiVersions:
+    - v1
+    - v1beta
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - vectoraggregators
   sideEffects: None

@@ -17,9 +17,17 @@ resources:
       webhookVersion: v1
   - group: logging
     controller: true
-    kind: VectorAgregator
+    kind: VectorAggregator
     version: v1beta
+    webhooks:
+      defaulting: true
+      validation: true
+      webhookVersion: v1
   - group: logging
     controller: true
     kind: VectorAgentPipeline
     version: v1beta
+    webhooks:
+      defaulting: true
+      validation: true
+      webhookVersion: v1

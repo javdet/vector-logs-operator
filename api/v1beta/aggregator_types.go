@@ -44,10 +44,12 @@ type VectorAggregatorSpec struct {
 type VectorAggregatorSources struct {
 	Kafka  VectorPipelineSourcesKafka  `json:"kafka,omitempty"`
 	Vector VectorPipelineSourcesVector `json:"vector,omitempty"`
+	AMQP   VectorAggregatorSourcesAMQP `json:"amqp,omitempty"`
+	S3     VectorAggregatorSourcesS3   `json:"s3,omitempty"`
 }
 
 type VectorPipelineSourcesKafka struct {
-	Name             string                       `json:"name"`
+	Name             string                       `json:"name,omitempty"`
 	BootstrapServers string                       `json:"bootstrapServers"`
 	KeyField         string                       `json:"keyField,omitempty"`
 	Topics           []string                     `json:"topics,omitempty"`
@@ -58,10 +60,25 @@ type VectorPipelineSourcesKafka struct {
 }
 
 type VectorPipelineSourcesVector struct {
-	Name    string `json:"name"`
+	Name    string `json:"name,omitempty"`
 	Host    string `json:"host"`
 	Port    int32  `json:"port"`
 	Version string `json:"version,omitempty"`
+}
+
+type VectorAggregatorSourcesAMQP struct {
+	Name       string `json:"name,omitempty"`
+	Connection string `json:"connection"`
+	GroupID    string `json:"groupID"`
+	OffsetKey  string `json:"offsetKey,omitempty"`
+}
+
+type VectorAggregatorSourcesS3 struct {
+	Name        string `json:"name,omitempty"`
+	Region      string `json:"region"`
+	SQS         string `json:"SQS"`
+	Compression string `json:"compression,omitempty"`
+	Endpoint    string `json:"endpoint,omitempty"`
 }
 
 type VectorAggregatorSinks struct {

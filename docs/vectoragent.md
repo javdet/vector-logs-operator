@@ -14,7 +14,7 @@ CRD defines base configuration for vector agents DaemonSet.
 `limits (VectorAgentSpecResourcesLimits, optional)`
 `requests (VectorAgentSpecResourcesRequests, optional)`
 
-## M2LogstashSpecRequestsLimits
+## VectorAgentSpecRequestsLimits
 `cpu (string, optional)` Default: '100m'
 `memory (string, optional)` Default '256Mi'
 
